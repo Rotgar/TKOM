@@ -1,0 +1,10 @@
+a = true;
+b = 1;
+
+log(b == a);
+log(b &= a);
+
+var b = 0, a = false;
+log(b == a);
+
+log(2 &= "2");

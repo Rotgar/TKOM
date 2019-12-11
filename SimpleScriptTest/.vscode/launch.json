@@ -1,0 +1,38 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "name": "debug",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/runTests",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true,
+                    "gtest-adapter.debugConfig": "debug",
+                    "gtest-adapter.showCodeLens": true,
+                    "gtest-adapter.refreshAfterBuild": true,
+                    "gtest-adapter.runAfterBuild": false,
+                    "gtest-adapter.gotoTestTitle": "Go to Tree",
+                    "gtest-adapter.runTitle": "Run",
+                    "gtest-adapter.debugTitle": "Debug",
+                    "gtest-adapter.supportLocation": false,
+                    "gtest-adapter.showRunOutput": true,
+                    "gtest-adapter.clearRunOutput": true
+                }
+            ]
+        }
+    ]
+}

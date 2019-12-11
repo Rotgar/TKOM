@@ -1,0 +1,49 @@
+function main(){
+arr = [];
+var i = 1;
+while(i < 10) {
+    arr.push(i * 2);
+    ++i;
+}
+
+arr.push(
+    {
+        a: 23,
+        b: "xyz",
+        func: function(param) {
+            return param * 20;
+        }
+    });
+if(arr.size() - 1 == 9){
+    log("jest 9");
+    log(arr[9].func(2));
+}
+
+arr[1] = ["nowa", "wew", function(){
+    log("dzien dobry");
+}];
+arr[1][2]();
+
+var obj = {a : "asd"};
+
+return arr;
+}
+x = 3-2-1;
+log(x);
+
+if(5 + "2" &= "52"){
+    log(" 5 + '2' === '52' ");
+}
+
+if(!(5&="5")){
+    log(" !(5 === '5') ");
+}
+
+x = main();
+log(x);
+
+qw = [1, 2];
+qw[0] = qw[0] + 5;
+qw[5] = {a: 23, b:45};
+log(qw);
+log(qw.size());

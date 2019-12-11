@@ -1,0 +1,3 @@
+/home/mateusz/Desktop/TKOM/SimpleScript/SimpleScriptTest/CMakeFiles/rebuild_cache.dir
+/home/mateusz/Desktop/TKOM/SimpleScript/SimpleScriptTest/CMakeFiles/runTests.dir
+/home/mateusz/Desktop/TKOM/SimpleScript/SimpleScriptTest/CMakeFiles/edit_cache.dir
