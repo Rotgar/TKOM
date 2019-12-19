@@ -43,8 +43,6 @@ void ReturnStatement::evaluate(Object& scope) {
 		variablePtr = std::make_shared<Variable>(
 			this->expressionPtr->evaluate(scope));
 	}
-
-
     throw ReturnVariable(variablePtr);
 }
 

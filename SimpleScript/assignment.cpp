@@ -34,15 +34,27 @@ void handleArray(shared_ptr<Identifier> identifierPtr, Object& scope){
     }
 }
 
+bool checkIfNewIdentifier(Variable var) {
+    Primitive prim = var.getPrimitive();
+    return (prim.isInteger() && prim.getBoolean() == true);
+}
+
 Variable OperationExpressionAssignment::evaluate(Object& scope) const {
     Variable var = this->expressionPtr->evaluate(scope);
     handleArray(this->identifierPtr, scope);
     
     if(var.isPrimitive()) {
+        if(checkIfNewIdentifier(var)){
+            if( scope.hasPrimitive(*(this->identifierPtr)) ||
+                scope.hasObject(*(this->identifierPtr)) ||
+                scope.hasFunction(*(this->identifierPtr))){
+                    return var;
+            }
+        }
         scope.getPrimitive(*(this->identifierPtr)) = var.getPrimitive();
 
         scope.removeObject(*(this->identifierPtr));
-        scope.removeFunction(*(this->identifierPtr));
+        scope.removeFunction(*(this->identifierPtr));    
     } else if(var.isObject()) {
         scope.getObject(*(this->identifierPtr)) = var.getObject();
 

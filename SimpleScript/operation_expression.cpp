@@ -22,10 +22,10 @@ Variable IdentifierExpression::evaluate(Object& scope) const {
         return scope.getPrimitive(*(this->identifierPtr));
     } else {
         Object& obj = scope.getObjectWithID(*(this->identifierPtr));
-        if(obj.isArray()){
+        if(obj.isArray()){ // jesli wyjdzie poza zakres listy, np. list = [1, 2], i wywola b = list[2]
             return Variable();
         }
-        throw InvalidIdentifierException("Unknown variable / a string must be inside \"\"");
+        throw InvalidIdentifierException("Error! Undefined identifier.");
     }
 }
 
@@ -42,9 +42,7 @@ Variable FunctionCallExpression::evaluate(Object& scope) const {
 		throw UndefinedFunctionException(
 			this->identifierPtr->operator std::string());
 	}
-
 	Function function = scope.getFunction(*(this->identifierPtr));
-
 	return function.call(scope, *(this->argumentsPtr));
 }
 
@@ -87,27 +85,27 @@ Variable LessThanOrEqualTo::evaluate(Object& scope) const {
     return Variable((this->expression1Ptr->evaluate(scope)) <= (this->expression2Ptr->evaluate(scope)));
 }
 
-Variable GreaterThanOrEqualTo::evaluate(Object& scope)  const{
+Variable GreaterThanOrEqualTo::evaluate(Object& scope) const{
     return Variable((this->expression1Ptr->evaluate(scope)) >= (this->expression2Ptr->evaluate(scope)));
 }
 
-Variable Equals::evaluate(Object& scope)  const{
+Variable Equals::evaluate(Object& scope) const{
     return Variable((this->expression1Ptr->evaluate(scope)) == (this->expression2Ptr->evaluate(scope)));
 }
 
-Variable EqualsType::evaluate(Object& scope)  const{
+Variable EqualsType::evaluate(Object& scope) const{
     return Variable((this->expression1Ptr->evaluate(scope)) &= (this->expression2Ptr->evaluate(scope)));
 }
 
-Variable NotEquals::evaluate(Object& scope)  const{
+Variable NotEquals::evaluate(Object& scope) const{
     return Variable((this->expression1Ptr->evaluate(scope)) != (this->expression2Ptr->evaluate(scope)));
 }
 
-Variable LogicalOr::evaluate(Object& scope)  const{
+Variable LogicalOr::evaluate(Object& scope) const{
     return Variable((this->expression1Ptr->evaluate(scope)) || (this->expression2Ptr->evaluate(scope)));
 }
 
-Variable LogicalAnd::evaluate(Object& scope)  const{
+Variable LogicalAnd::evaluate(Object& scope) const{
     return Variable((this->expression1Ptr->evaluate(scope)) && (this->expression2Ptr->evaluate(scope)));
 }
 

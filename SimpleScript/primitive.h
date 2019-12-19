@@ -23,6 +23,9 @@ public:
     Primitive() : type(INTEGER), intVal(0), floatVal(0.0), 
 		boolVal(false), stringVal("") {}
 
+	Primitive(const int i, const bool b) : type(INTEGER), intVal(0), floatVal(0.0), 
+		boolVal(true), stringVal("") {} // dummy primitive to indicate undefined identifier - var x;	
+
 	explicit Primitive(const int i) : type(INTEGER), intVal(i), floatVal(0.0),
 		boolVal(false), stringVal("") {}
 

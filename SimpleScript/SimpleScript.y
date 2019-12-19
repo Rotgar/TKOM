@@ -104,6 +104,8 @@
 %type<operationExpressionVal> assignment_expression
 %type<operationExpressionVal> argument
 %type<operationExpressionVal> function_call_expression
+%type<operationExpressionVal> variable_declaration
+%type<operationExpressionsListVal> variable_declaration_list
 %type<parametersListVal> parameters_list
 %type<propertyListVal> properties_names_and_values
 %type<propertyListVal> array_elements
@@ -112,9 +114,21 @@
 %type<objectLiteralVal> object_literal
 %type<objectLiteralVal> array
 %type<argumentsListyVal> arguments_list
-%type<operationExpressionsListVal> variable_declaration_list
-%type<operationExpressionVal> variable_declaration
 
+%destructor { } <integerVal>
+%destructor { } <floatVal>
+%destructor { } <booleanVal>
+%destructor { free ($$); } <stringVal>
+%destructor { free ($$); } <identifierVal>
+%destructor { free ($$); } <statementsListVal>
+%destructor { free ($$); } <statementVal>
+%destructor { free ($$); } <operationExpressionVal>
+%destructor { free ($$); } <operationExpressionsListVal>
+%destructor { free ($$); } <parametersListVal>
+%destructor { free ($$); } <propertyListVal>
+%destructor { free ($$); } <propertyVal>
+%destructor { free ($$); } <objectLiteralVal>
+%destructor { free ($$); } <argumentsListyVal>
 
 %%
 program                         : statements_list {
@@ -423,7 +437,7 @@ variable_declaration            : assignment_expression {
 										$$ = $1;
 									}
                                 | IDENTIFIER {
-										Primitive zeroPrimitive = Primitive(0);
+										Primitive zeroPrimitive = Primitive(0, true);
 										Variable zero = Variable(zeroPrimitive);
 										ConstantExpression zeroConstantExpression =
 											ConstantExpression(std::shared_ptr<Variable>(new Variable(zero)));

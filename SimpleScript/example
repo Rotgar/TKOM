@@ -28,6 +28,8 @@ var obj = {a : "asd"};
 
 return arr;
 }
+/*
+
 x = 3-2-1;
 log(x);
 
@@ -38,7 +40,6 @@ if(5 + "2" &= "52"){
 if(!(5&="5")){
     log(" !(5 === '5') ");
 }
-
 x = main();
 log(x);
 
@@ -47,3 +48,30 @@ qw[0] = qw[0] + 5;
 qw[5] = {a: 23, b:45};
 log(qw);
 log(qw.size());
+var b;
+
+x = 
+{
+    a: [4, 3]
+};
+
+asda = [2, 4, 2];
+x = false <= false;
+log(asda[0]);
+d = 5;
+++d;
+log(d);
+d = [1, 2, asda];
+b = d[2];
+
+log(x);
+log(b);*/
+x, y;
+y = function(a)
+{   
+    x = 2;
+    return a + x;
+};
+log(y(4));
+x = 3 && 0;
+log(x);

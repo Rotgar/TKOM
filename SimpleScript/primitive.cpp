@@ -161,6 +161,12 @@ Primitive Primitive::operator+(const Primitive& primitive) const {
         return Primitive(to_string(this->intVal) + primitive.stringVal);
     } else if (this->type == STRING && primitive.type == INTEGER) {
         return Primitive(this->stringVal + to_string(primitive.intVal));
+    } else if (this->type == BOOLEAN && primitive.type == BOOLEAN) {
+        if(this->boolVal == true && primitive.boolVal == true){
+            return Primitive(2);
+        } else if(this->boolVal == false && primitive.boolVal == false){
+            return Primitive(0);
+        } else return Primitive(1);
     } else return Primitive();
 }
 
@@ -175,6 +181,7 @@ Primitive Primitive::operator-(const Primitive& primitive) const {
         return Primitive(this->floatVal - primitive.floatVal);
     } else return Primitive();
 }
+
 Primitive Primitive::operator*(const Primitive& primitive) const {
     if(this->type == INTEGER && primitive.type == INTEGER) {
         return Primitive(this->intVal * primitive.intVal);
