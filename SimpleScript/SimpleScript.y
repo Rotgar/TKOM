@@ -88,7 +88,6 @@
 %left OPEN_PARENTHESIS CLOSE_PARENTHESIS
 %left DOT OPEN_BRACKET CLOSE_BRACKET
 
-
 %type<identifierVal> identifier
 %type<statementsListVal> block
 %type<statementsListVal> statements_list
@@ -132,18 +131,18 @@
 
 %%
 program                         : statements_list {
-										Program(std::shared_ptr<StatementsList>($1)).evaluate();
+										Program(shared_ptr<StatementsList>($1)).evaluate();
 									}
                                 | /* empty statements list */
                                 ;
 
 statements_list                 : statements_list statement {
-										$1->add(std::shared_ptr<Statement>($2));
+										$1->add(shared_ptr<Statement>($2));
 										$$ = $1;
 									}
                                 | statement {
 										StatementsList* stmtsList = new StatementsList();
-										stmtsList->add(std::shared_ptr<Statement>($1));
+										stmtsList->add(shared_ptr<Statement>($1));
 
 										$$ = stmtsList;
 									}
@@ -158,65 +157,65 @@ statement                       : expression_statement
                                 ;
 
 expression_statement            : assignment_expression delimiter {
-										$$ = new ExpressionStatement(std::shared_ptr<OperationExpression>($1));
+										$$ = new ExpressionStatement(unique_ptr<OperationExpression>($1));
 									}
                                 | operation_expression delimiter {
-										$$ = new ExpressionStatement(std::shared_ptr<OperationExpression>($1));
+										$$ = new ExpressionStatement(unique_ptr<OperationExpression>($1));
 									}
                                 ;
 
 assignment_expression           : identifier ASSIGN operation_expression {
-										$$ = new OperationExpressionAssignment(std::shared_ptr<Identifier>($1),
-												std::shared_ptr<OperationExpression>($3));
+										$$ = new OperationExpressionAssignment(shared_ptr<Identifier>($1),
+												shared_ptr<OperationExpression>($3));
 									}
 								| identifier DOT PUSH OPEN_PARENTHESIS array_element CLOSE_PARENTHESIS {
-										$$ = new ArrayPushExpressionAssignment(std::shared_ptr<Identifier>($1),
-												std::shared_ptr<Property>($5));
+										$$ = new ArrayPushExpressionAssignment(shared_ptr<Identifier>($1),
+												shared_ptr<Property>($5));
 									}
                                 | identifier ASSIGN function_declaration_statement {
 										FunctionDeclarationStatement* fdstmtPtr = dynamic_cast<FunctionDeclarationStatement*> ($3);
 										Function funct = fdstmtPtr->getFunction();
 
-										$$ = new FunctionAssignment(std::shared_ptr<Identifier>($1), funct);
+										$$ = new FunctionAssignment(shared_ptr<Identifier>($1), funct);
 									}
                                 | identifier ASSIGN object_literal {
-										$$ = new ObjectLiteralAssignment(std::shared_ptr<Identifier>($1),
-											std::shared_ptr<ObjectLiteral>($3));
+										$$ = new ObjectLiteralAssignment(shared_ptr<Identifier>($1),
+											shared_ptr<ObjectLiteral>($3));
 									}
                                 | identifier ASSIGN array {
-									$$ = new ObjectLiteralAssignment(std::shared_ptr<Identifier>($1),
-											std::shared_ptr<ObjectLiteral>($3));
+									$$ = new ObjectLiteralAssignment(shared_ptr<Identifier>($1),
+											shared_ptr<ObjectLiteral>($3));
                   					}
 								| INC identifier {
 										Primitive onePrimitive = Primitive(1);
 										Variable one = Variable(onePrimitive);
 										ConstantExpression oneConstantExpression =
-											ConstantExpression(std::shared_ptr<Variable>(new Variable(one)));
+											ConstantExpression(unique_ptr<Variable>(new Variable(one)));
 
 										OperationExpression* expression = new Addition(
-											std::shared_ptr<OperationExpression>(new IdentifierExpression(std::shared_ptr<Identifier>($2))),
-											std::shared_ptr<OperationExpression>(new ConstantExpression(oneConstantExpression)));
+											unique_ptr<OperationExpression>(new IdentifierExpression(unique_ptr<Identifier>($2))),
+											unique_ptr<OperationExpression>(new ConstantExpression(oneConstantExpression)));
 
-										$$ = new OperationExpressionAssignment(std::shared_ptr<Identifier>($2),
-												std::shared_ptr<OperationExpression>(expression));
+										$$ = new OperationExpressionAssignment(shared_ptr<Identifier>($2),
+												shared_ptr<OperationExpression>(expression));
 									}
                                 | DEC identifier {
 										Primitive onePrimitive = Primitive(1);
 										Variable one = Variable(onePrimitive);
 										ConstantExpression oneConstantExpression =
-											ConstantExpression(std::shared_ptr<Variable>(new Variable(one)));
+											ConstantExpression(unique_ptr<Variable>(new Variable(one)));
 
 										OperationExpression* expression = new Subtraction(
-											std::shared_ptr<OperationExpression>(new IdentifierExpression(std::shared_ptr<Identifier>($2))),
-											std::shared_ptr<OperationExpression>(new ConstantExpression(oneConstantExpression)));
+											unique_ptr<OperationExpression>(new IdentifierExpression(unique_ptr<Identifier>($2))),
+											unique_ptr<OperationExpression>(new ConstantExpression(oneConstantExpression)));
 
-										$$ = new OperationExpressionAssignment(std::shared_ptr<Identifier>($2),
-												std::shared_ptr<OperationExpression>(expression));
+										$$ = new OperationExpressionAssignment(shared_ptr<Identifier>($2),
+												shared_ptr<OperationExpression>(expression));
 									}
                                 ;
 
 object_literal                  : OPEN_BRACE properties_names_and_values CLOSE_BRACE {
-										$$ = new ObjectLiteral(shared_ptr<PropertyList>($2));
+										$$ = new ObjectLiteral(unique_ptr<PropertyList>($2));
 									}
                                 ;
 
@@ -226,40 +225,40 @@ properties_names_and_values     : /* empty object */ {
 										$$ = propertyList;
 									}
                                 | properties_names_and_values COMMA property_name_and_value {
-										$1->add(std::shared_ptr<Property>($3));
+										$1->add(shared_ptr<Property>($3));
 										$$ = $1;
 									}
                                 | property_name_and_value {
 										PropertyList* propertyList = new PropertyList();
 										propertyList->setIsArray(false);
-										propertyList->add(std::shared_ptr<Property>($1));
+										propertyList->add(shared_ptr<Property>($1));
 
 										$$ = propertyList;
 									}
                                 ;
 
 property_name_and_value         : IDENTIFIER COLON operation_expression {
-										$$ = new Property($1, std::shared_ptr<OperationExpression>($3));
+										$$ = new Property($1, shared_ptr<OperationExpression>($3));
 									}
                                 | IDENTIFIER COLON function_declaration_statement {
 										FunctionDeclarationStatement* fdstmtPtr = dynamic_cast<FunctionDeclarationStatement*> ($3);
 										Function funct = fdstmtPtr->getFunction();
 
-										$$ = new Property($1, std::shared_ptr<Function>(new Function(funct)));
+										$$ = new Property($1, shared_ptr<Function>(new Function(funct)));
 									}
                                 | IDENTIFIER COLON object_literal {
-										$$ = new Property($1, std::shared_ptr<ObjectLiteral>($3));
+										$$ = new Property($1, shared_ptr<ObjectLiteral>($3));
 									}
 
 								| IDENTIFIER COLON array {
-										$$ = new Property($1, std::shared_ptr<ObjectLiteral>($3));
+										$$ = new Property($1, shared_ptr<ObjectLiteral>($3));
 									}
                                 ;
 
 array                           : 
 								{ Property::setElementCounter(0); }
 								  OPEN_BRACKET array_elements CLOSE_BRACKET {
-										$$ = new ObjectLiteral(shared_ptr<PropertyList>($3));
+										$$ = new ObjectLiteral(unique_ptr<PropertyList>($3));
 									}
                                 ;
 
@@ -269,129 +268,129 @@ array_elements                  : /* empty elem */ {
 										$$ = propertyList;
 									}
                                 | array_elements COMMA array_element {
-										$1->add(std::shared_ptr<Property>($3));
+										$1->add(shared_ptr<Property>($3));
 										$$ = $1;
 									}
                                 | array_element {
 										PropertyList* propertyList = new PropertyList();
 										propertyList->setIsArray(true);
-										propertyList->add(std::shared_ptr<Property>($1));
+										propertyList->add(shared_ptr<Property>($1));
 
 										$$ = propertyList;
 									}
                                 ;
 
 array_element                  : operation_expression {
-										$$ = new Property(std::shared_ptr<OperationExpression>($1));
+										$$ = new Property(shared_ptr<OperationExpression>($1));
 									}
                                 | function_declaration_statement{
 										FunctionDeclarationStatement* fdstmtPtr = 
 											dynamic_cast<FunctionDeclarationStatement*> ($1);
 										Function funct = fdstmtPtr->getFunction();
 
-										$$ = new Property(std::shared_ptr<Function>(new Function(funct)));
+										$$ = new Property(shared_ptr<Function>(new Function(funct)));
                                 	}	
                                 | object_literal {
-                  						$$ = new Property(std::shared_ptr<ObjectLiteral>($1));
+                  						$$ = new Property(shared_ptr<ObjectLiteral>($1));
 									}
 				  				| 
 									{ arrayPosition = Property::getElementCounter(); } 
 								  array {
 										Property::setElementCounter(arrayPosition);
-                  						$$ = new Property(std::shared_ptr<ObjectLiteral>($2));
+                  						$$ = new Property(shared_ptr<ObjectLiteral>($2));
                                 	}
                                 ;
 
 operation_expression            : OPEN_PARENTHESIS operation_expression CLOSE_PARENTHESIS { $$ = $2; }
                                 | INTEGER_T {
 										Primitive primitive = Primitive($1);
-										$$ = new ConstantExpression(std::shared_ptr<Variable>(new Variable(primitive)));
+										$$ = new ConstantExpression(unique_ptr<Variable>(new Variable(primitive)));
 									}
                                 | FLOAT_T {
 										Primitive primitive = Primitive($1);
-										$$ = new ConstantExpression(std::shared_ptr<Variable>(new Variable(primitive)));
+										$$ = new ConstantExpression(unique_ptr<Variable>(new Variable(primitive)));
 									}
                                 | BOOLEAN_T {
 										Primitive primitive = Primitive($1);
-										$$ = new ConstantExpression(std::shared_ptr<Variable>(new Variable(primitive)));
+										$$ = new ConstantExpression(unique_ptr<Variable>(new Variable(primitive)));
 									}
                                 | STRING_T {
-										Primitive primitive = Primitive(std::string($1), true);
-										$$ = new ConstantExpression(std::shared_ptr<Variable>(new Variable(primitive)));
+										Primitive primitive = Primitive(string($1), true);
+										$$ = new ConstantExpression(unique_ptr<Variable>(new Variable(primitive)));
 									}
                                 | operation_expression AND operation_expression {
-										$$ = new LogicalAnd(std::shared_ptr<OperationExpression>($1),
-											std::shared_ptr<OperationExpression>($3));
+										$$ = new LogicalAnd(unique_ptr<OperationExpression>($1),
+											unique_ptr<OperationExpression>($3));
 									}
                                 | operation_expression OR operation_expression {
-										$$ = new LogicalOr(std::shared_ptr<OperationExpression>($1),
-											std::shared_ptr<OperationExpression>($3));
+										$$ = new LogicalOr(unique_ptr<OperationExpression>($1),
+											unique_ptr<OperationExpression>($3));
 									}
                                 | operation_expression LESS_THAN operation_expression {
-										$$ = new LessThan(std::shared_ptr<OperationExpression>($1),
-											std::shared_ptr<OperationExpression>($3));
+										$$ = new LessThan(unique_ptr<OperationExpression>($1),
+											unique_ptr<OperationExpression>($3));
 									}
                                 | operation_expression LESS_EQUAL_THAN operation_expression {
-										$$ = new LessThanOrEqualTo(std::shared_ptr<OperationExpression>($1),
-											std::shared_ptr<OperationExpression>($3));
+										$$ = new LessThanOrEqualTo(unique_ptr<OperationExpression>($1),
+											unique_ptr<OperationExpression>($3));
 									}
                                 | operation_expression GREATER_THAN operation_expression {
-										$$ = new GreaterThan(std::shared_ptr<OperationExpression>($1),
-											std::shared_ptr<OperationExpression>($3));
+										$$ = new GreaterThan(unique_ptr<OperationExpression>($1),
+											unique_ptr<OperationExpression>($3));
 									}
                                 | operation_expression GREATER_EQUAL_THAN operation_expression {
-										$$ = new GreaterThanOrEqualTo(std::shared_ptr<OperationExpression>($1),
-											std::shared_ptr<OperationExpression>($3));
+										$$ = new GreaterThanOrEqualTo(unique_ptr<OperationExpression>($1),
+											unique_ptr<OperationExpression>($3));
 									}
                                 | operation_expression EQUAL operation_expression {
-										$$ = new Equals(std::shared_ptr<OperationExpression>($1),
-											std::shared_ptr<OperationExpression>($3));
+										$$ = new Equals(unique_ptr<OperationExpression>($1),
+											unique_ptr<OperationExpression>($3));
 									}
 								| operation_expression EQUAL_TYPE operation_expression {
-										$$ = new EqualsType(std::shared_ptr<OperationExpression>($1),
-											std::shared_ptr<OperationExpression>($3));
+										$$ = new EqualsType(unique_ptr<OperationExpression>($1),
+											unique_ptr<OperationExpression>($3));
 									}	
                                 | operation_expression NOT_EQUAL operation_expression {
-										$$ = new NotEquals(std::shared_ptr<OperationExpression>($1),
-											std::shared_ptr<OperationExpression>($3));
+										$$ = new NotEquals(unique_ptr<OperationExpression>($1),
+											unique_ptr<OperationExpression>($3));
 									}
                                 | operation_expression PLUS operation_expression {
-										$$ = new Addition(std::shared_ptr<OperationExpression>($1),
-											std::shared_ptr<OperationExpression>($3));
+										$$ = new Addition(unique_ptr<OperationExpression>($1),
+											unique_ptr<OperationExpression>($3));
 									}
                                 | operation_expression MINUS operation_expression {
-										$$ = new Subtraction(std::shared_ptr<OperationExpression>($1),
-											std::shared_ptr<OperationExpression>($3));
+										$$ = new Subtraction(unique_ptr<OperationExpression>($1),
+											unique_ptr<OperationExpression>($3));
 									}
                                 | operation_expression ASTERISK operation_expression {
-										$$ = new Multiplication(std::shared_ptr<OperationExpression>($1),
-											std::shared_ptr<OperationExpression>($3));
+										$$ = new Multiplication(unique_ptr<OperationExpression>($1),
+											unique_ptr<OperationExpression>($3));
 									}
                                 | operation_expression SLASH operation_expression {
-										$$ = new Division(std::shared_ptr<OperationExpression>($1),
-											std::shared_ptr<OperationExpression>($3));
+										$$ = new Division(unique_ptr<OperationExpression>($1),
+											unique_ptr<OperationExpression>($3));
 									}
                                 | NOT operation_expression {
-										$$ = new LogicalNot(std::shared_ptr<OperationExpression>($2));
+										$$ = new LogicalNot(unique_ptr<OperationExpression>($2));
 									}
 								| MINUS operation_expression {
-										$$ = new Negation(std::shared_ptr<OperationExpression>($2));
+										$$ = new Negation(unique_ptr<OperationExpression>($2));
 									}
                                 | function_call_expression { 
 										$$ = $1; 
 									}
                                 | identifier DOT SIZE OPEN_PARENTHESIS CLOSE_PARENTHESIS {
-										$$ = new ArraySizeExpression(std::shared_ptr<Identifier>($1));
+										$$ = new ArraySizeExpression(unique_ptr<Identifier>($1));
 									}
 								| identifier %prec NO_FUNCTION_CALL {
-										$$ = new IdentifierExpression(std::shared_ptr<Identifier>($1));
+										$$ = new IdentifierExpression(unique_ptr<Identifier>($1));
 									}
                                 ;
 
 function_call_expression        : identifier OPEN_PARENTHESIS arguments_list CLOSE_PARENTHESIS {
 										$$ = new FunctionCallExpression(
-											std::shared_ptr<Identifier>($1),
-											std::shared_ptr<ArgumentsList>($3));
+											unique_ptr<Identifier>($1),
+											unique_ptr<ArgumentsList>($3));
 									}
                                 ;
 
@@ -400,12 +399,12 @@ arguments_list                  : /* empty arguments list */ {
 										$$ = argsList;
 									}
                                 | arguments_list COMMA argument {
-										$1->add(std::shared_ptr<OperationExpression>($3));
+										$1->add(shared_ptr<OperationExpression>($3));
 										$$ = $1;
 									}
                                 | argument {
 										ArgumentsList* argsList = new ArgumentsList();
-										argsList->add(std::shared_ptr<OperationExpression>($1));
+										argsList->add(shared_ptr<OperationExpression>($1));
 
 										$$ = argsList;
 									}
@@ -416,18 +415,18 @@ argument                        : operation_expression { $$ = $1; }
 
 variable_declaration_statement  : VAR variable_declaration_list delimiter {
 										$$ = new VariableDeclarationStatement(
-											std::shared_ptr<OperationExpressionsList>($2));
+											shared_ptr<OperationExpressionsList>($2));
 									}
                                 ;
 
 variable_declaration_list       : variable_declaration_list COMMA variable_declaration {
-										$1->add(std::shared_ptr<OperationExpression>($3));
+										$1->add(shared_ptr<OperationExpression>($3));
 
 										$$ = $1;
 									}
                                 | variable_declaration {
 										OperationExpressionsList* list = new OperationExpressionsList();
-										list->add(std::shared_ptr<OperationExpression>($1));
+										list->add(shared_ptr<OperationExpression>($1));
 
 										$$ = list;
 									}
@@ -440,26 +439,26 @@ variable_declaration            : assignment_expression {
 										Primitive zeroPrimitive = Primitive(0, true);
 										Variable zero = Variable(zeroPrimitive);
 										ConstantExpression zeroConstantExpression =
-											ConstantExpression(std::shared_ptr<Variable>(new Variable(zero)));
+											ConstantExpression(unique_ptr<Variable>(new Variable(zero)));
 
-										$$ = new OperationExpressionAssignment(std::shared_ptr<Identifier>(new Identifier($1)),
-												std::shared_ptr<OperationExpression>(new ConstantExpression(zeroConstantExpression)));
+										$$ = new OperationExpressionAssignment(shared_ptr<Identifier>(new Identifier($1)),
+												shared_ptr<OperationExpression>(new ConstantExpression(zeroConstantExpression)));
 									}
                                 ;
 
 function_declaration_statement  : FUNCTION_T IDENTIFIER OPEN_PARENTHESIS parameters_list CLOSE_PARENTHESIS function_body {
-										Function* functionPtr = new Function(std::shared_ptr<ParametersList>($4),
-											std::shared_ptr<StatementsList>($6));
+										Function* functionPtr = new Function(shared_ptr<ParametersList>($4),
+											shared_ptr<StatementsList>($6));
 
-										$$ = new FunctionDeclarationStatement(std::shared_ptr<Function>(functionPtr),
-											std::shared_ptr<Identifier>(new Identifier($2)));
+										$$ = new FunctionDeclarationStatement(unique_ptr<Function>(functionPtr),
+											unique_ptr<Identifier>(new Identifier($2)));
 
 									}
                                 | FUNCTION_T OPEN_PARENTHESIS parameters_list CLOSE_PARENTHESIS function_body {
-										Function* functionPtr = new Function(std::shared_ptr<ParametersList>($3),
-											std::shared_ptr<StatementsList>($5));
+										Function* functionPtr = new Function(shared_ptr<ParametersList>($3),
+											shared_ptr<StatementsList>($5));
 
-										$$ = new FunctionDeclarationStatement(std::shared_ptr<Function>(functionPtr));
+										$$ = new FunctionDeclarationStatement(unique_ptr<Function>(functionPtr));
 
 									}
                                 ;
@@ -484,7 +483,7 @@ function_body                   : OPEN_BRACE statements_list CLOSE_BRACE { $$ = 
                                 ;
 
 return_statement                : RETURN operation_expression delimiter {
-										$$ = new ReturnStatement(std::shared_ptr<OperationExpression>($2));
+										$$ = new ReturnStatement(unique_ptr<OperationExpression>($2));
 									}
 								| RETURN delimiter {
 										$$ = new ReturnStatement();
@@ -492,18 +491,18 @@ return_statement                : RETURN operation_expression delimiter {
                                 ;
 
 iteration_statement             : WHILE OPEN_PARENTHESIS operation_expression CLOSE_PARENTHESIS block {
-										$$ = new IterationStatement(std::shared_ptr<OperationExpression>($3),
-												std::shared_ptr<StatementsList>($5));
+										$$ = new IterationStatement(unique_ptr<OperationExpression>($3),
+												unique_ptr<StatementsList>($5));
 									}
                                 ;
 
 conditional_statement           : IF OPEN_PARENTHESIS operation_expression CLOSE_PARENTHESIS block %prec NO_ELSE {
-										$$ = new ConditionalStatement(std::shared_ptr<OperationExpression>($3),
-												std::shared_ptr<StatementsList>($5));
+										$$ = new ConditionalStatement(unique_ptr<OperationExpression>($3),
+												unique_ptr<StatementsList>($5));
 									}
 					            | IF OPEN_PARENTHESIS operation_expression CLOSE_PARENTHESIS block ELSE block {
-										$$ = new ConditionalStatement(std::shared_ptr<OperationExpression>($3),
-												std::shared_ptr<StatementsList>($5), std::shared_ptr<StatementsList>($7));
+										$$ = new ConditionalStatement(unique_ptr<OperationExpression>($3),
+												unique_ptr<StatementsList>($5), unique_ptr<StatementsList>($7));
 									}
                                 ;
 
@@ -512,7 +511,7 @@ block                           : OPEN_BRACE statements_list CLOSE_BRACE {
 									}
                                 | statement {
 										StatementsList* stmtsList = new StatementsList();
-										stmtsList->add(std::shared_ptr<Statement>($1));
+										stmtsList->add(shared_ptr<Statement>($1));
 
 										$$ = stmtsList;
 									}

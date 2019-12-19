@@ -21,7 +21,7 @@ Function Program::generateLogFunction() {
 	paramsListPtr->add(paramName);
 
 	Identifier* id = new Identifier(paramName);
-	IdentifierExpression* ie = new IdentifierExpression(shared_ptr<Identifier>(id));
+	IdentifierExpression* ie = new IdentifierExpression(unique_ptr<Identifier>(id));
 
 	LogStatement* stmt = new LogStatement(shared_ptr<IdentifierExpression>(ie));
 

@@ -28,7 +28,7 @@ var obj = {a : "asd"};
 
 return arr;
 }
-/*
+
 
 x = 3-2-1;
 log(x);
@@ -65,8 +65,8 @@ d = [1, 2, asda];
 b = d[2];
 
 log(x);
-log(b);*/
-x, y;
+log(b);
+
 y = function(a)
 {   
     x = 2;

@@ -18,11 +18,9 @@ bool Primitive::isBoolean() {
 	return this->type == BOOLEAN;
 }
 
-
 bool Primitive::isString() {
 	return this->type == STRING;
 }
-
 
 int Primitive::getInteger() {
 	return this->intVal;

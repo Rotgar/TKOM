@@ -32,39 +32,39 @@ public:
 };
 
 class ConditionalStatement : public Statement {
-    shared_ptr<OperationExpression> conditionExpressionPtr;
+    unique_ptr<OperationExpression> conditionExpressionPtr;
 
-	shared_ptr<StatementsList> trueStatementListPtr;
-	shared_ptr<StatementsList> falseStatementListPtr;
+	unique_ptr<StatementsList> trueStatementListPtr;
+	unique_ptr<StatementsList> falseStatementListPtr;
 
 public:
-    ConditionalStatement(shared_ptr<OperationExpression> oePtr,
-		shared_ptr<StatementsList> trueStmtListPtr, shared_ptr<StatementsList> falseStmtListPtr)
+    ConditionalStatement(unique_ptr<OperationExpression> oePtr,
+		unique_ptr<StatementsList> trueStmtListPtr, unique_ptr<StatementsList> falseStmtListPtr)
             : conditionExpressionPtr(move(oePtr)), trueStatementListPtr(move(trueStmtListPtr)),
 			falseStatementListPtr(move(falseStmtListPtr)) {}
 
-    ConditionalStatement(shared_ptr<OperationExpression> oePtr, shared_ptr<StatementsList> trueStmtListPtr)
+    ConditionalStatement(unique_ptr<OperationExpression> oePtr, unique_ptr<StatementsList> trueStmtListPtr)
         : conditionExpressionPtr(move(oePtr)), trueStatementListPtr(move(trueStmtListPtr)), falseStatementListPtr(nullptr) {}
 
 	virtual void evaluate(Object&);
 };
 
 class IterationStatement : public Statement {
-    shared_ptr<OperationExpression> conditionExpressionPtr;
-	shared_ptr<StatementsList> statementsListPtr;
+    unique_ptr<OperationExpression> conditionExpressionPtr;
+	unique_ptr<StatementsList> statementsListPtr;
 
 public:
-    IterationStatement(shared_ptr<OperationExpression> conditionExprPtr, shared_ptr<StatementsList> stmtsListPtr)
+    IterationStatement(unique_ptr<OperationExpression> conditionExprPtr, unique_ptr<StatementsList> stmtsListPtr)
         : conditionExpressionPtr(move(conditionExprPtr)), statementsListPtr(move(stmtsListPtr)) {}
 
 	virtual void evaluate(Object&);
 };
 
 class ReturnStatement : public Statement {
-    shared_ptr<OperationExpression> expressionPtr;
+    unique_ptr<OperationExpression> expressionPtr;
 
 public:
-    ReturnStatement(shared_ptr<OperationExpression> exprPtr)
+    ReturnStatement(unique_ptr<OperationExpression> exprPtr)
         : expressionPtr(move(exprPtr)) {}
 	
 	ReturnStatement()
@@ -74,14 +74,14 @@ public:
 };
 
 class FunctionDeclarationStatement : public Statement {
-    shared_ptr<Function> functionPtr;
-	shared_ptr<Identifier> identifierPtr;
+    unique_ptr<Function> functionPtr;
+	unique_ptr<Identifier> identifierPtr;
 
 public:
-    FunctionDeclarationStatement(shared_ptr<Function> functPtr, shared_ptr<Identifier> idPtr)
+    FunctionDeclarationStatement(unique_ptr<Function> functPtr, unique_ptr<Identifier> idPtr)
         : functionPtr(move(functPtr)), identifierPtr(move(idPtr)) {}
 
-	FunctionDeclarationStatement(shared_ptr<Function> functPtr)
+	FunctionDeclarationStatement(unique_ptr<Function> functPtr)
 		: functionPtr(move(functPtr)), identifierPtr(nullptr) {}
 
 	virtual void evaluate(Object&);
@@ -89,10 +89,10 @@ public:
 };
 
 class ExpressionStatement : public Statement {
-    shared_ptr<OperationExpression> operationExpressionPtr;
+    unique_ptr<OperationExpression> operationExpressionPtr;
 
 public:
-	ExpressionStatement(shared_ptr<OperationExpression> opExprPtr)
+	ExpressionStatement(unique_ptr<OperationExpression> opExprPtr)
         : operationExpressionPtr(move(opExprPtr)) {}
 
 	virtual void evaluate(Object&);

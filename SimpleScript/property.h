@@ -77,10 +77,10 @@ public:
 };
 
 class ObjectLiteral {
-	shared_ptr<PropertyList> propertyListPtr;
+	unique_ptr<PropertyList> propertyListPtr;
 
 public:
-	ObjectLiteral(shared_ptr<PropertyList> plPtr)
+	ObjectLiteral(unique_ptr<PropertyList> plPtr)
 		:propertyListPtr(move(plPtr)) {
 			// Property::setElementCounter(0);
 		}
