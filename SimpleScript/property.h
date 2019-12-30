@@ -65,11 +65,11 @@ public:
 };
 
 class PropertyList {
-    list<shared_ptr<Property>> listPtr;
+    list<unique_ptr<Property>> listPtr;
 	bool isArrayDeclaration;
 
 public:
-    void add(shared_ptr<Property>);
+    void add(unique_ptr<Property>);
 	Variable evaluate(Object&);
 
 	void setIsArray(bool);

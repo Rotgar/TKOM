@@ -222,13 +222,13 @@ properties_names_and_values     : /* empty object */ {
 										$$ = propertyList;
 									}
                                 | properties_names_and_values COMMA property_name_and_value {
-										$1->add(shared_ptr<Property>($3));
+										$1->add(unique_ptr<Property>($3));
 										$$ = $1;
 									}
                                 | property_name_and_value {
 										PropertyList* propertyList = new PropertyList();
 										propertyList->setIsArray(false);
-										propertyList->add(shared_ptr<Property>($1));
+										propertyList->add(unique_ptr<Property>($1));
 
 										$$ = propertyList;
 									}
@@ -265,13 +265,13 @@ array_elements                  : /* empty elem */ {
 										$$ = propertyList;
 									}
                                 | array_elements COMMA array_element {
-										$1->add(shared_ptr<Property>($3));
+										$1->add(unique_ptr<Property>($3));
 										$$ = $1;
 									}
                                 | array_element {
 										PropertyList* propertyList = new PropertyList();
 										propertyList->setIsArray(true);
-										propertyList->add(shared_ptr<Property>($1));
+										propertyList->add(unique_ptr<Property>($1));
 
 										$$ = propertyList;
 									}

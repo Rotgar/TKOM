@@ -57,7 +57,7 @@ Variable PropertyList::evaluate(Object& scope) {
 		object.setArraySize(0);
 	}
 
-	for (std::list<shared_ptr<Property>>::iterator it = this->listPtr.begin(); it != this->listPtr.end(); ++it) {
+	for (std::list<unique_ptr<Property>>::iterator it = this->listPtr.begin(); it != this->listPtr.end(); ++it) {
 		string propertyName = (*it)->getName();
 		Identifier name(propertyName);
 		Variable var = (*it)->evaluate(scope);
@@ -80,8 +80,8 @@ Variable PropertyList::evaluate(Object& scope) {
 	return Variable(shared_ptr<Object>(new Object(object)));
 }
 
-void PropertyList::add(shared_ptr<Property> property) {
-    this->listPtr.push_back(property);
+void PropertyList::add(unique_ptr<Property> property) {
+    this->listPtr.push_back(move(property));
 }
 
 Variable ObjectLiteral::evaluate(Object& scope) {
