@@ -189,12 +189,11 @@ assignment_expression           : identifier ASSIGN operation_expression {
 								| INC identifier {
 										Primitive onePrimitive = Primitive(1);
 										Variable one = Variable(onePrimitive);
-										ConstantExpression oneConstantExpression =
-											ConstantExpression(unique_ptr<Variable>(new Variable(one)));
 
 										OperationExpression* expression = new Addition(
 											unique_ptr<OperationExpression>(new IdentifierExpression(unique_ptr<Identifier>($2))),
-											unique_ptr<OperationExpression>(new ConstantExpression(oneConstantExpression)));
+											unique_ptr<OperationExpression>(new ConstantExpression(unique_ptr<Variable>(new Variable(one))))
+											);
 
 										$$ = new OperationExpressionAssignment(unique_ptr<Identifier>($2),
 												unique_ptr<OperationExpression>(expression));
@@ -202,12 +201,10 @@ assignment_expression           : identifier ASSIGN operation_expression {
                                 | DEC identifier {
 										Primitive onePrimitive = Primitive(1);
 										Variable one = Variable(onePrimitive);
-										ConstantExpression oneConstantExpression =
-											ConstantExpression(unique_ptr<Variable>(new Variable(one)));
 
 										OperationExpression* expression = new Subtraction(
 											unique_ptr<OperationExpression>(new IdentifierExpression(unique_ptr<Identifier>($2))),
-											unique_ptr<OperationExpression>(new ConstantExpression(oneConstantExpression)));
+											unique_ptr<OperationExpression>(new ConstantExpression(unique_ptr<Variable>(new Variable(one)))));
 
 										$$ = new OperationExpressionAssignment(unique_ptr<Identifier>($2),
 												unique_ptr<OperationExpression>(expression));
@@ -238,20 +235,20 @@ properties_names_and_values     : /* empty object */ {
                                 ;
 
 property_name_and_value         : IDENTIFIER COLON operation_expression {
-										$$ = new Property($1, shared_ptr<OperationExpression>($3));
+										$$ = new Property($1, unique_ptr<OperationExpression>($3));
 									}
                                 | IDENTIFIER COLON function_declaration_statement {
 										FunctionDeclarationStatement* fdstmtPtr = dynamic_cast<FunctionDeclarationStatement*> ($3);
 										Function funct = fdstmtPtr->getFunction();
 
-										$$ = new Property($1, shared_ptr<Function>(new Function(funct)));
+										$$ = new Property($1, unique_ptr<Function>(new Function(funct)));
 									}
                                 | IDENTIFIER COLON object_literal {
-										$$ = new Property($1, shared_ptr<ObjectLiteral>($3));
+										$$ = new Property($1, unique_ptr<ObjectLiteral>($3));
 									}
 
 								| IDENTIFIER COLON array {
-										$$ = new Property($1, shared_ptr<ObjectLiteral>($3));
+										$$ = new Property($1, unique_ptr<ObjectLiteral>($3));
 									}
                                 ;
 
@@ -281,23 +278,23 @@ array_elements                  : /* empty elem */ {
                                 ;
 
 array_element                  : operation_expression {
-										$$ = new Property(shared_ptr<OperationExpression>($1));
+										$$ = new Property(unique_ptr<OperationExpression>($1));
 									}
                                 | function_declaration_statement{
 										FunctionDeclarationStatement* fdstmtPtr = 
 											dynamic_cast<FunctionDeclarationStatement*> ($1);
 										Function funct = fdstmtPtr->getFunction();
 
-										$$ = new Property(shared_ptr<Function>(new Function(funct)));
+										$$ = new Property(unique_ptr<Function>(new Function(funct)));
                                 	}	
                                 | object_literal {
-                  						$$ = new Property(shared_ptr<ObjectLiteral>($1));
+                  						$$ = new Property(unique_ptr<ObjectLiteral>($1));
 									}
 				  				| 
 									{ arrayPosition = Property::getElementCounter(); } 
 								  array {
 										Property::setElementCounter(arrayPosition);
-                  						$$ = new Property(shared_ptr<ObjectLiteral>($2));
+                  						$$ = new Property(unique_ptr<ObjectLiteral>($2));
                                 	}
                                 ;
 
@@ -438,11 +435,9 @@ variable_declaration            : assignment_expression {
                                 | IDENTIFIER {
 										Primitive zeroPrimitive = Primitive(0, true);
 										Variable zero = Variable(zeroPrimitive);
-										ConstantExpression zeroConstantExpression =
-											ConstantExpression(unique_ptr<Variable>(new Variable(zero)));
 
 										$$ = new OperationExpressionAssignment(unique_ptr<Identifier>(new Identifier($1)),
-												unique_ptr<OperationExpression>(new ConstantExpression(zeroConstantExpression)));
+												unique_ptr<OperationExpression>(new ConstantExpression(unique_ptr<Variable>(new Variable(zero)))));
 									}
                                 ;
 

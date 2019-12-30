@@ -84,8 +84,8 @@ public:
 };
 
 class FunctionCallExpression : public OperationExpression {
-	shared_ptr<Identifier> identifierPtr;
-	shared_ptr<ArgumentsList> argumentsPtr;
+	unique_ptr<Identifier> identifierPtr;
+	unique_ptr<ArgumentsList> argumentsPtr;
 
 public:
 	FunctionCallExpression(unique_ptr<Identifier> idPtr,
