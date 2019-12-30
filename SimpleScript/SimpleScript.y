@@ -131,18 +131,18 @@
 
 %%
 program                         : statements_list {
-										Program(shared_ptr<StatementsList>($1)).evaluate();
+										Program(unique_ptr<StatementsList>($1)).evaluate();
 									}
                                 | /* empty statements list */
                                 ;
 
 statements_list                 : statements_list statement {
-										$1->add(shared_ptr<Statement>($2));
+										$1->add(unique_ptr<Statement>($2));
 										$$ = $1;
 									}
                                 | statement {
 										StatementsList* stmtsList = new StatementsList();
-										stmtsList->add(shared_ptr<Statement>($1));
+										stmtsList->add(unique_ptr<Statement>($1));
 
 										$$ = stmtsList;
 									}
@@ -165,26 +165,26 @@ expression_statement            : assignment_expression delimiter {
                                 ;
 
 assignment_expression           : identifier ASSIGN operation_expression {
-										$$ = new OperationExpressionAssignment(shared_ptr<Identifier>($1),
-												shared_ptr<OperationExpression>($3));
+										$$ = new OperationExpressionAssignment(unique_ptr<Identifier>($1),
+												unique_ptr<OperationExpression>($3));
 									}
 								| identifier DOT PUSH OPEN_PARENTHESIS array_element CLOSE_PARENTHESIS {
-										$$ = new ArrayPushExpressionAssignment(shared_ptr<Identifier>($1),
-												shared_ptr<Property>($5));
+										$$ = new ArrayPushExpressionAssignment(unique_ptr<Identifier>($1),
+												unique_ptr<Property>($5));
 									}
                                 | identifier ASSIGN function_declaration_statement {
 										FunctionDeclarationStatement* fdstmtPtr = dynamic_cast<FunctionDeclarationStatement*> ($3);
 										Function funct = fdstmtPtr->getFunction();
 
-										$$ = new FunctionAssignment(shared_ptr<Identifier>($1), funct);
+										$$ = new FunctionAssignment(unique_ptr<Identifier>($1), funct);
 									}
                                 | identifier ASSIGN object_literal {
-										$$ = new ObjectLiteralAssignment(shared_ptr<Identifier>($1),
-											shared_ptr<ObjectLiteral>($3));
+										$$ = new ObjectLiteralAssignment(unique_ptr<Identifier>($1),
+											unique_ptr<ObjectLiteral>($3));
 									}
                                 | identifier ASSIGN array {
-									$$ = new ObjectLiteralAssignment(shared_ptr<Identifier>($1),
-											shared_ptr<ObjectLiteral>($3));
+									$$ = new ObjectLiteralAssignment(unique_ptr<Identifier>($1),
+											unique_ptr<ObjectLiteral>($3));
                   					}
 								| INC identifier {
 										Primitive onePrimitive = Primitive(1);
@@ -196,8 +196,8 @@ assignment_expression           : identifier ASSIGN operation_expression {
 											unique_ptr<OperationExpression>(new IdentifierExpression(unique_ptr<Identifier>($2))),
 											unique_ptr<OperationExpression>(new ConstantExpression(oneConstantExpression)));
 
-										$$ = new OperationExpressionAssignment(shared_ptr<Identifier>($2),
-												shared_ptr<OperationExpression>(expression));
+										$$ = new OperationExpressionAssignment(unique_ptr<Identifier>($2),
+												unique_ptr<OperationExpression>(expression));
 									}
                                 | DEC identifier {
 										Primitive onePrimitive = Primitive(1);
@@ -209,8 +209,8 @@ assignment_expression           : identifier ASSIGN operation_expression {
 											unique_ptr<OperationExpression>(new IdentifierExpression(unique_ptr<Identifier>($2))),
 											unique_ptr<OperationExpression>(new ConstantExpression(oneConstantExpression)));
 
-										$$ = new OperationExpressionAssignment(shared_ptr<Identifier>($2),
-												shared_ptr<OperationExpression>(expression));
+										$$ = new OperationExpressionAssignment(unique_ptr<Identifier>($2),
+												unique_ptr<OperationExpression>(expression));
 									}
                                 ;
 
@@ -415,7 +415,7 @@ argument                        : operation_expression { $$ = $1; }
 
 variable_declaration_statement  : VAR variable_declaration_list delimiter {
 										$$ = new VariableDeclarationStatement(
-											shared_ptr<OperationExpressionsList>($2));
+											unique_ptr<OperationExpressionsList>($2));
 									}
                                 ;
 
@@ -441,8 +441,8 @@ variable_declaration            : assignment_expression {
 										ConstantExpression zeroConstantExpression =
 											ConstantExpression(unique_ptr<Variable>(new Variable(zero)));
 
-										$$ = new OperationExpressionAssignment(shared_ptr<Identifier>(new Identifier($1)),
-												shared_ptr<OperationExpression>(new ConstantExpression(zeroConstantExpression)));
+										$$ = new OperationExpressionAssignment(unique_ptr<Identifier>(new Identifier($1)),
+												unique_ptr<OperationExpression>(new ConstantExpression(zeroConstantExpression)));
 									}
                                 ;
 
@@ -511,7 +511,7 @@ block                           : OPEN_BRACE statements_list CLOSE_BRACE {
 									}
                                 | statement {
 										StatementsList* stmtsList = new StatementsList();
-										stmtsList->add(shared_ptr<Statement>($1));
+										stmtsList->add(unique_ptr<Statement>($1));
 
 										$$ = stmtsList;
 									}

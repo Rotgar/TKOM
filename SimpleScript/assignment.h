@@ -11,44 +11,44 @@ using namespace std;
 #include "property.h"
 
 class OperationExpressionAssignment : public OperationExpression {
-	shared_ptr<Identifier> identifierPtr;
-    shared_ptr<OperationExpression> expressionPtr;
+	unique_ptr<Identifier> identifierPtr;
+    unique_ptr<OperationExpression> expressionPtr;
 
 public:
-    OperationExpressionAssignment(shared_ptr<Identifier> idPtr, shared_ptr<OperationExpression> ePtr)
+    OperationExpressionAssignment(unique_ptr<Identifier> idPtr, unique_ptr<OperationExpression> ePtr)
         : identifierPtr(move(idPtr)), expressionPtr(move(ePtr)) {}
 
     Variable evaluate(Object&) const;
 };
 
 class FunctionAssignment : public OperationExpression {
-	shared_ptr<Identifier> identifierPtr;
+	unique_ptr<Identifier> identifierPtr;
     Function funct;
 
 public:
-    FunctionAssignment(shared_ptr<Identifier> idPtr, Function f)
+    FunctionAssignment(unique_ptr<Identifier> idPtr, Function f)
         : identifierPtr(move(idPtr)), funct(f) {}
 
 	Variable evaluate(Object&) const;
 };
 
 class ObjectLiteralAssignment : public OperationExpression {
-	shared_ptr<Identifier> identifierPtr;
-	shared_ptr<ObjectLiteral> objectLiteralPtr;
+	unique_ptr<Identifier> identifierPtr;
+	unique_ptr<ObjectLiteral> objectLiteralPtr;
 
 public:
-	ObjectLiteralAssignment(shared_ptr<Identifier> idPtr, shared_ptr<ObjectLiteral> olPtr)
+	ObjectLiteralAssignment(unique_ptr<Identifier> idPtr, unique_ptr<ObjectLiteral> olPtr)
         : identifierPtr(move(idPtr)), objectLiteralPtr(move(olPtr)) {}
 
 	Variable evaluate(Object&) const;
 };
 
 class ArrayPushExpressionAssignment: public OperationExpression {
-    shared_ptr<Identifier> identifierPtr;
-    shared_ptr<Property> propertyPtr;
+    unique_ptr<Identifier> identifierPtr;
+    unique_ptr<Property> propertyPtr;
 
 public:
-	ArrayPushExpressionAssignment(shared_ptr<Identifier> idPtr, shared_ptr<Property> ePtr)
+	ArrayPushExpressionAssignment(unique_ptr<Identifier> idPtr, unique_ptr<Property> ePtr)
         : identifierPtr(move(idPtr)), propertyPtr(move(ePtr)) {}
 
 	Variable evaluate(Object&) const;

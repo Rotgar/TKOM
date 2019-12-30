@@ -23,12 +23,12 @@ public:
 };
 
 class StatementsList {
-    list<shared_ptr<Statement>> statements;
+    list<unique_ptr<Statement>> statements;
 
 public:
 	void evaluate(Object&);
 
-    void add(shared_ptr<Statement>);
+    void add(unique_ptr<Statement>);
 };
 
 class ConditionalStatement : public Statement {
@@ -99,20 +99,20 @@ public:
 };
 
 class VariableDeclarationStatement : public Statement {
-    shared_ptr<OperationExpressionsList> operationExpressionsListPtr;
+    unique_ptr<OperationExpressionsList> operationExpressionsListPtr;
 
 public:
-	VariableDeclarationStatement(shared_ptr<OperationExpressionsList> opExprListPtr)
+	VariableDeclarationStatement(unique_ptr<OperationExpressionsList> opExprListPtr)
         : operationExpressionsListPtr(move(opExprListPtr)) {}
 
 	virtual void evaluate(Object&);
 };
 
 class LogStatement : public Statement {
-	shared_ptr<IdentifierExpression> identifierExpressionPtr;
+	unique_ptr<IdentifierExpression> identifierExpressionPtr;
 
 public:
-	LogStatement(shared_ptr<IdentifierExpression> iePtr)
+	LogStatement(unique_ptr<IdentifierExpression> iePtr)
 		: identifierExpressionPtr(move(iePtr)) {}
 
 	virtual void evaluate(Object&);

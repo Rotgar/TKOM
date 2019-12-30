@@ -3,12 +3,13 @@
 
 #include <iostream>
 #include <memory>
-using namespace std;
 
 #include "object.h"
 #include "variable.h"
 #include "function.h"
 #include "exception.h"
+
+using namespace std;
 
 class Object;
 class Variable;
@@ -40,7 +41,7 @@ public:
         : expressionPtr(move(ePtr)) {}
 
 protected:
-    shared_ptr<OperationExpression> expressionPtr;
+    unique_ptr<OperationExpression> expressionPtr;
 };
 
 class BinaryOperationExpression : public OperationExpression {
@@ -55,7 +56,7 @@ protected:
 };
 
 class ConstantExpression : public OperationExpression {
-    shared_ptr<Variable> variablePtr;
+    unique_ptr<Variable> variablePtr;
 
 public:
     ConstantExpression(unique_ptr<Variable> varPtr): variablePtr(move(varPtr)) {}
@@ -198,7 +199,5 @@ public:
         : BinaryOperationExpression(move(e1Ptr), move(e2Ptr)) {}
     virtual Variable evaluate(Object&) const;
 };
-
-
 
 #endif // OPERATION_EXPRESSION_H_INCLUDED

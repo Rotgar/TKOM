@@ -43,8 +43,7 @@ public:
 		this->type = STRING;
 
 		if (quotation) {
-			this->stringVal = 
-				str.substr(1, str.length() - 2);
+			this->stringVal = str.substr(1, str.length() - 2);
 		}
 		else {
 			this->stringVal = str;
@@ -77,7 +76,6 @@ public:
     operator bool() const;
 
     Primitive& operator=  (const Primitive&);
-
     Primitive  operator+  (const Primitive&) const;
     Primitive  operator-  (const Primitive&) const;
     Primitive  operator*  (const Primitive&) const;
@@ -86,7 +84,6 @@ public:
     Primitive  operator++ () const;
     Primitive  operator-- () const;
     Primitive  operator! () const;
-
 };
 
 #endif // PRIMITIVE_H_INCLUDED

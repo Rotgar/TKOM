@@ -15,7 +15,7 @@ bool checkRegex(string value){
     return regex_match(value, identifierRegex);
 }
 
-void handleArray(shared_ptr<Identifier> identifierPtr, Object& scope){
+void handleArray(unique_ptr<Identifier> const &identifierPtr, Object& scope){
     if(scope.isObject(*(identifierPtr))){
         Object& id = scope.getObjectWithID(*(identifierPtr));
         if(id.isArray()){
@@ -76,7 +76,7 @@ Variable FunctionAssignment::evaluate(Object& scope) const {
     scope.removeObject(*(this->identifierPtr));
     scope.removePrimitive(*(this->identifierPtr));
 
-	return Variable(shared_ptr<Function>(new Function(this->funct)));
+	return Variable(unique_ptr<Function>(new Function(this->funct)));
 }
 
 Variable ObjectLiteralAssignment::evaluate(Object& scope) const {

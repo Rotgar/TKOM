@@ -13,11 +13,11 @@ Variable IdentifierExpression::evaluate(Object& scope) const {
     if(scope.hasObject(*(this->identifierPtr))) {
         Object *obj = new Object();
         *obj = scope.getObject(*(this->identifierPtr));
-        return Variable(shared_ptr<Object>(obj));
+        return Variable(unique_ptr<Object>(obj));
     } else if(scope.hasFunction(*(this->identifierPtr))) {
         Function *func = new Function();
         *func = scope.getFunction(*(this->identifierPtr));
-        return Variable(shared_ptr<Function>(func));
+        return Variable(unique_ptr<Function>(func));
     } else if(scope.hasPrimitive(*(this->identifierPtr))) {
         return scope.getPrimitive(*(this->identifierPtr));
     } else {

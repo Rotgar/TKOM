@@ -23,13 +23,13 @@ Function Program::generateLogFunction() {
 	Identifier* id = new Identifier(paramName);
 	IdentifierExpression* ie = new IdentifierExpression(unique_ptr<Identifier>(id));
 
-	LogStatement* stmt = new LogStatement(shared_ptr<IdentifierExpression>(ie));
+	LogStatement* stmt = new LogStatement(unique_ptr<IdentifierExpression>(ie));
 
 	StatementsList* stmtsListPtr = new StatementsList();
-	stmtsListPtr->add(shared_ptr<Statement>(stmt));
+	stmtsListPtr->add(unique_ptr<Statement>(stmt));
 
-	Function funct = Function(shared_ptr<ParametersList>(paramsListPtr),
-		shared_ptr<StatementsList>(stmtsListPtr));
+	Function funct = Function(unique_ptr<ParametersList>(paramsListPtr),
+		unique_ptr<StatementsList>(stmtsListPtr));
 
 	return funct;
 }

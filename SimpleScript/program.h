@@ -11,10 +11,10 @@
 using namespace std;
 
 class Program {
-	shared_ptr<StatementsList> statementsListPtr;
+	unique_ptr<StatementsList> statementsListPtr;
 
 public:
-	Program(shared_ptr<StatementsList> slPtr)
+	Program(unique_ptr<StatementsList> slPtr)
 		: statementsListPtr(move(slPtr)) {}
 
 	Function generateLogFunction();

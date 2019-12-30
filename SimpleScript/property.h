@@ -20,35 +20,35 @@ class Property {
 	string name;
 
 	PropertyTypes type;
-	shared_ptr<OperationExpression> operationExpressionPtr;
+	unique_ptr<OperationExpression> operationExpressionPtr;
 	shared_ptr<ObjectLiteral> objectLiteralPtr;
 	shared_ptr<Function> functionPtr;
 
 public:
-    Property(string name, shared_ptr<OperationExpression> oePtr)
+    Property(string name, unique_ptr<OperationExpression> oePtr)
 		:name(name), operationExpressionPtr(move(oePtr)),
 		type(OPERATION_EXPRESSION_PROPERTY) {}
 
-	Property(string name, shared_ptr<ObjectLiteral> olPtr)
+	Property(string name, unique_ptr<ObjectLiteral> olPtr)
 		:name(name), objectLiteralPtr(move(olPtr)),
 		type(OBJECT_LITERAL_PROPERTY) {}
 
-	Property(string name, shared_ptr<Function> fPtr)
+	Property(string name, unique_ptr<Function> fPtr)
 		:name(name), functionPtr(move(fPtr)),
 		type(FUNCTION_PROPERTY) {}
 
-	Property(shared_ptr<OperationExpression> oePtr)
-		: Property(to_string(elementCounter), oePtr) {
+	Property(unique_ptr<OperationExpression> oePtr)
+		: Property(to_string(elementCounter), move(oePtr)) {
 		elementCounter++;
 	}
 
-	Property(shared_ptr<ObjectLiteral> olPtr)
-		: Property(to_string(elementCounter), olPtr) {
+	Property(unique_ptr<ObjectLiteral> olPtr)
+		: Property(to_string(elementCounter), move(olPtr)) {
 		elementCounter++;
 	}
 
-	Property(shared_ptr<Function> fPtr)
-		: Property(to_string(elementCounter), fPtr) {
+	Property(unique_ptr<Function> fPtr)
+		: Property(to_string(elementCounter), move(fPtr)) {
 		elementCounter++;
 	}
 
@@ -81,9 +81,7 @@ class ObjectLiteral {
 
 public:
 	ObjectLiteral(unique_ptr<PropertyList> plPtr)
-		:propertyListPtr(move(plPtr)) {
-			// Property::setElementCounter(0);
-		}
+		:propertyListPtr(move(plPtr)) {}
 
 	Variable evaluate(Object&);
 };

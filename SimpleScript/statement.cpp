@@ -9,8 +9,8 @@ using namespace std;
 #include "exception.h"
 #include "variable.h"
 
-void StatementsList::add(shared_ptr<Statement> statementPtr) {
-    this->statements.push_back(statementPtr);
+void StatementsList::add(unique_ptr<Statement> statementPtr) {
+    this->statements.push_back(move(statementPtr));
 }
 
 void StatementsList::evaluate(Object& scope) {
