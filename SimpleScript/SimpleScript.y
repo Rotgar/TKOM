@@ -396,12 +396,12 @@ arguments_list                  : /* empty arguments list */ {
 										$$ = argsList;
 									}
                                 | arguments_list COMMA argument {
-										$1->add(shared_ptr<OperationExpression>($3));
+										$1->add(unique_ptr<OperationExpression>($3));
 										$$ = $1;
 									}
                                 | argument {
 										ArgumentsList* argsList = new ArgumentsList();
-										argsList->add(shared_ptr<OperationExpression>($1));
+										argsList->add(unique_ptr<OperationExpression>($1));
 
 										$$ = argsList;
 									}
@@ -417,13 +417,13 @@ variable_declaration_statement  : VAR variable_declaration_list delimiter {
                                 ;
 
 variable_declaration_list       : variable_declaration_list COMMA variable_declaration {
-										$1->add(shared_ptr<OperationExpression>($3));
+										$1->add(unique_ptr<OperationExpression>($3));
 
 										$$ = $1;
 									}
                                 | variable_declaration {
 										OperationExpressionsList* list = new OperationExpressionsList();
-										list->add(shared_ptr<OperationExpression>($1));
+										list->add(unique_ptr<OperationExpression>($1));
 
 										$$ = list;
 									}

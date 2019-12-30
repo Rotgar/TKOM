@@ -32,7 +32,6 @@ void ArgumentsList::add(shared_ptr<OperationExpression> oex) {
     this->argumentsList.push_back(oex);
 }
 
-
 list<shared_ptr<OperationExpression>>::iterator ArgumentsList::begin() {
     return this->argumentsList.begin();
 }
@@ -87,4 +86,3 @@ Variable Function::call(Object parentScope, ArgumentsList args) {
 
     return Variable();
 }
-

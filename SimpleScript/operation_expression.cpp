@@ -39,8 +39,7 @@ Variable ArraySizeExpression::evaluate(Object& scope) const {
 
 Variable FunctionCallExpression::evaluate(Object& scope) const {
 	if (!scope.hasFunction(*(this->identifierPtr))) {
-		throw UndefinedFunctionException(
-			this->identifierPtr->operator std::string());
+		throw UndefinedFunctionException(this->identifierPtr->operator std::string());
 	}
 	Function function = scope.getFunction(*(this->identifierPtr));
 	return function.call(scope, *(this->argumentsPtr));
@@ -109,15 +108,15 @@ Variable LogicalAnd::evaluate(Object& scope) const{
     return Variable((this->expression1Ptr->evaluate(scope)) && (this->expression2Ptr->evaluate(scope)));
 }
 
-void OperationExpressionsList::add(shared_ptr<OperationExpression> oex) {
-	this->operationExpressionsList.push_back(oex);
+void OperationExpressionsList::add(unique_ptr<OperationExpression> oex) {
+	this->operationExpressionsList.push_back(move(oex));
 }
 
-list<shared_ptr<OperationExpression>>::iterator OperationExpressionsList::begin() {
+list<unique_ptr<OperationExpression>>::iterator OperationExpressionsList::begin() {
 	return this->operationExpressionsList.begin();
 }
 
-list<shared_ptr<OperationExpression>>::iterator OperationExpressionsList::end() {
+list<unique_ptr<OperationExpression>>::iterator OperationExpressionsList::end() {
 	return this->operationExpressionsList.end();
 }
 

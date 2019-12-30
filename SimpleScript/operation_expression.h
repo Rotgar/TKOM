@@ -23,12 +23,12 @@ public:
 };
 
 class OperationExpressionsList {
-	list<shared_ptr<OperationExpression>> operationExpressionsList;
+	list<unique_ptr<OperationExpression>> operationExpressionsList;
 
 public:
-	void add(shared_ptr<OperationExpression>);
-	list<shared_ptr<OperationExpression>>::iterator begin();
-	list<shared_ptr<OperationExpression>>::iterator end();
+	void add(unique_ptr<OperationExpression>);
+	list<unique_ptr<OperationExpression>>::iterator begin();
+	list<unique_ptr<OperationExpression>>::iterator end();
 
 	size_t size() const;
 	void evaluate(Object&);
