@@ -20,9 +20,9 @@ class Property {
 	string name;
 
 	PropertyTypes type;
-	shared_ptr<OperationExpression> operationExpressionPtr;
-	shared_ptr<ObjectLiteral> objectLiteralPtr;
-	shared_ptr<Function> functionPtr;
+	unique_ptr<OperationExpression> operationExpressionPtr;
+	unique_ptr<ObjectLiteral> objectLiteralPtr;
+	unique_ptr<Function> functionPtr;
 
 public:
     Property(string name, unique_ptr<OperationExpression> oePtr)

@@ -13,7 +13,6 @@ bool Primitive::isFloat() {
 	return this->type == FLOAT;
 }
 
-
 bool Primitive::isBoolean() {
 	return this->type == BOOLEAN;
 }

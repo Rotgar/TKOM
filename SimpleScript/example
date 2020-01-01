@@ -1,34 +1,33 @@
 function main(){
-arr = [];
-var i = 1;
-while(i < 10) {
-    arr.push(i * 2);
-    ++i;
+    arr = [];
+    var i = 1;
+    while(i < 10) {
+        arr.push(i * 2);
+        ++i;
+    }
+
+    arr.push(
+        {
+            a: 23,
+            b: "xyz",
+            func: function(param) {
+                return param * 20;
+            }
+        });
+    if(arr.size() - 1 == 9){
+        log("jest 9");
+        log(arr[9].func(2));
+    }
+
+    arr[1] = ["nowa", "wew", function(){
+        log("dzien dobry");
+    }];
+    arr[1][2]();
+
+    var obj = {a : "asd"};
+
+    return arr;
 }
-
-arr.push(
-    {
-        a: 23,
-        b: "xyz",
-        func: function(param) {
-            return param * 20;
-        }
-    });
-if(arr.size() - 1 == 9){
-    log("jest 9");
-    log(arr[9].func(2));
-}
-
-arr[1] = ["nowa", "wew", function(){
-    log("dzien dobry");
-}];
-arr[1][2]();
-
-var obj = {a : "asd"};
-
-return arr;
-}
-
 
 x = 3-2-1;
 log(x);
@@ -57,7 +56,7 @@ x =
 
 asda = [2, 4, 2];
 x = false <= false;
-log(asda[0]);
+log(x);
 d = 5;
 ++d;
 log(d);

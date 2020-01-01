@@ -32,10 +32,10 @@ Variable Property::evaluate(Object& scope) {
 		return this->operationExpressionPtr->evaluate(scope);
 	}
 	else if (this->isObjectLiteral()) {
-		return this->objectLiteralPtr->evaluate(scope);
+		return Variable(move(this->objectLiteralPtr->evaluate(scope)));
 	}
 	else if (this->isFunction()) {
-		return Variable(this->functionPtr);
+		return Variable(move(this->functionPtr));
 	}
 	else {
 		return Variable();
@@ -77,7 +77,7 @@ Variable PropertyList::evaluate(Object& scope) {
 			}
 		}
 	}
-	return Variable(shared_ptr<Object>(new Object(object)));
+	return Variable(unique_ptr<Object>(new Object(object)));
 }
 
 void PropertyList::add(unique_ptr<Property> property) {

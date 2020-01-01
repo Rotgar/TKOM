@@ -47,7 +47,11 @@ extern Variable _PARSE_RESULT;
 #define PARSE_RESULT_SUCCESS 0
 #define PARSE_RESULT_FAILITURE 1
 
-#define ptr std::shared_ptr
+#define ID_A Identifier("a")
+#define ID_B Identifier("b")
+#define ID_C Identifier("c")
+
+#define ptr std::unique_ptr
 
 ConstantExpression createConstantExpression(int val) {
 	Primitive primitive1 = Primitive(val);
@@ -55,24 +59,13 @@ ConstantExpression createConstantExpression(int val) {
 	return ConstantExpression(ptr<Variable>(new Variable(variable1)));
 }
 
-OperationExpressionAssignment createOpAssignExpr(ptr<Identifier> id, ConstantExpression expr) {
-	return OperationExpressionAssignment(ptr<Identifier>(id),
-			ptr<OperationExpression>(new ConstantExpression(expr)));
+OperationExpressionAssignment createOpAssignExpr(ptr<Identifier> id, ptr<ConstantExpression> expr) {
+	return OperationExpressionAssignment(move(id), move(expr));
 }
 
-
-OperationExpressionAssignment createAdditionAssignment(ptr<Identifier> id, ConstantExpression expr) {
-	return OperationExpressionAssignment(ptr<Identifier>(id),
-			ptr<OperationExpression>(new Addition(
-				ptr<OperationExpression>(new IdentifierExpression(ptr<Identifier>(id))),
-				ptr<OperationExpression>(new ConstantExpression(expr)))));
-}
-
-OperationExpressionAssignment createMultiplicationAssignment(ptr<Identifier> id, ConstantExpression expr1, ConstantExpression expr2) {
-	return OperationExpressionAssignment(ptr<Identifier>(id),
-			ptr<OperationExpression>(new Multiplication(
-				ptr<OperationExpression>(new ConstantExpression(expr1)),
-				ptr<OperationExpression>(new ConstantExpression(expr2)))));
+OperationExpressionAssignment createMultiplicationAssignment(ptr<Identifier> id, ptr<ConstantExpression> expr1, ptr<ConstantExpression> expr2) {
+	return OperationExpressionAssignment(move(id),
+			ptr<OperationExpression>(new Multiplication(move(expr1), move(expr2))));
 }
 
 TEST(Primitive, Should_Contstruct_When_Passed_Int) {
@@ -123,6 +116,7 @@ TEST(Primitive, Should_Be_Added_Correctly_When_Integer_And_Float) {
 	EXPECT_TRUE(resultPrimitive.isFloat());
 	EXPECT_EQ(resultPrimitive.getFloat(), INTEGER_VALUE_A + FLOAT_VALUE_A);
 }
+
 TEST(Primitive, Should_Be_Added_Correctly_When_Floats) {
 	Primitive primitive1 = Primitive(FLOAT_VALUE_A);
 	Primitive primitive2 = Primitive(FLOAT_VALUE_B);
@@ -368,18 +362,18 @@ TEST(OperationExpression, Should_Assign_Constant_To_Variable_Properly) {
 		a = 12
 	*/
 	Object globalScope = Object();
-	ptr<Identifier> aIdentifier = ptr<Identifier>(new Identifier("a"));
-	ConstantExpression aConstantExpression = createConstantExpression(INTEGER_VALUE_A);
+	
+	ptr<ConstantExpression> aConstantExpression = make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_A));
 
-	OperationExpressionAssignment aExpressionAssignment = createOpAssignExpr(aIdentifier, aConstantExpression);
+	OperationExpressionAssignment aExpressionAssignment = createOpAssignExpr(move(ptr<Identifier>(new Identifier("a"))), move(aConstantExpression));
 	Variable result = aExpressionAssignment.evaluate(globalScope);
 
 	EXPECT_TRUE(result.isPrimitive());
-	EXPECT_TRUE(globalScope.hasPrimitive(*aIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*aIdentifier).isInteger());
+	EXPECT_TRUE(globalScope.hasPrimitive(ID_A));
+	EXPECT_TRUE(globalScope.getPrimitive(ID_A).isInteger());
 
 	EXPECT_EQ(result.getPrimitive().getInteger(), INTEGER_VALUE_A);
-	EXPECT_EQ(globalScope.getPrimitive(*aIdentifier).getInteger(), INTEGER_VALUE_A);
+	EXPECT_EQ(globalScope.getPrimitive(ID_A).getInteger(), INTEGER_VALUE_A);
 }
 
 TEST(OperationExpression, Should_Assign_Addition_Constant_To_Variable_Properly) {
@@ -388,38 +382,34 @@ TEST(OperationExpression, Should_Assign_Addition_Constant_To_Variable_Properly) 
 		b = a + 8
 	*/
 	Object globalScope = Object();
-	ptr<Identifier> aIdentifier = ptr<Identifier>(new Identifier("a"));
-	ConstantExpression aConstantExpression = createConstantExpression(INTEGER_VALUE_A);
+	ptr<ConstantExpression> aConstantExpression = make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_A));
 
-	OperationExpressionAssignment aExpressionAssignment = createOpAssignExpr(aIdentifier, aConstantExpression);
+	OperationExpressionAssignment aExpressionAssignment = createOpAssignExpr(move(ptr<Identifier>(new Identifier("a"))), move(aConstantExpression));
 	Variable constantAssignmentResult = aExpressionAssignment.evaluate(globalScope);
 
-	ptr<Identifier> bIdentifier = ptr<Identifier>(new Identifier("b"));
-	ConstantExpression sumConstantExpression = createConstantExpression(INTEGER_VALUE_B);
+	
+	ptr<ConstantExpression> sumConstantExpression = make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_B));
 
-	IdentifierExpression aIdExpression = IdentifierExpression(aIdentifier);
-
-	OperationExpressionAssignment bExpressionAssignment =
-		OperationExpressionAssignment(ptr<Identifier>(bIdentifier),
+	OperationExpressionAssignment bExpressionAssignment = OperationExpressionAssignment(move(ptr<Identifier>(new Identifier("b"))),
 			ptr<OperationExpression>(new Addition(
-				ptr<OperationExpression>(new ConstantExpression(sumConstantExpression)),
-				ptr<OperationExpression>(new IdentifierExpression(aIdExpression)))));
+				move(sumConstantExpression),
+				ptr<OperationExpression>(new IdentifierExpression(move(ptr<Identifier>(new Identifier("a"))))))));
 
 	Variable result = bExpressionAssignment.evaluate(globalScope);
 
 	EXPECT_TRUE(constantAssignmentResult.isPrimitive());
-	EXPECT_TRUE(globalScope.hasPrimitive(*aIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*aIdentifier).isInteger());
+	EXPECT_TRUE(globalScope.hasPrimitive(ID_A));
+	EXPECT_TRUE(globalScope.getPrimitive(ID_A).isInteger());
 
 	EXPECT_TRUE(result.isPrimitive());
-	EXPECT_TRUE(globalScope.hasPrimitive(*bIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*bIdentifier).isInteger());
+	EXPECT_TRUE(globalScope.hasPrimitive(ID_B));
+	EXPECT_TRUE(globalScope.getPrimitive(ID_B).isInteger());
 
 	EXPECT_EQ(constantAssignmentResult.getPrimitive().getInteger(), INTEGER_VALUE_A);
-	EXPECT_EQ(globalScope.getPrimitive(*aIdentifier).getInteger(), INTEGER_VALUE_A);
+	EXPECT_EQ(globalScope.getPrimitive(ID_A).getInteger(), INTEGER_VALUE_A);
 
 	EXPECT_EQ(result.getPrimitive().getInteger(), INTEGER_VALUE_A + INTEGER_VALUE_B);
-	EXPECT_EQ(globalScope.getPrimitive(*bIdentifier).getInteger(), INTEGER_VALUE_A + INTEGER_VALUE_B);
+	EXPECT_EQ(globalScope.getPrimitive(ID_B).getInteger(), INTEGER_VALUE_A + INTEGER_VALUE_B);
 }
 
 TEST(OperationExpression, Should_Assign_Subtraction_From_Self) {
@@ -428,30 +418,27 @@ TEST(OperationExpression, Should_Assign_Subtraction_From_Self) {
 		a = a - 12
 	*/
 	Object globalScope = Object();
-	ptr<Identifier> aIdentifier = ptr<Identifier>(new Identifier("a"));
-	ConstantExpression constExpr1 = createConstantExpression(INTEGER_VALUE_A);
-	ConstantExpression constExpr2 = createConstantExpression(INTEGER_VALUE_B);
-
-	OperationExpressionAssignment expressionAssignment1 = createMultiplicationAssignment(aIdentifier, constExpr1, constExpr2);
+	
+	OperationExpressionAssignment expressionAssignment1 = createMultiplicationAssignment(move(ptr<Identifier>(new Identifier("a"))), 
+		move(make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_A))),
+		move(make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_B))));
 	Variable firstAssignmentResult = expressionAssignment1.evaluate(globalScope);
 
-	OperationExpressionAssignment expressionAssignment2 =
-		OperationExpressionAssignment(ptr<Identifier>(aIdentifier),
+	OperationExpressionAssignment expressionAssignment2 = OperationExpressionAssignment(move(ptr<Identifier>(new Identifier("a"))),
 			ptr<OperationExpression>(new Subtraction(
-				ptr<OperationExpression>(new IdentifierExpression(ptr<Identifier>(aIdentifier))),
-				ptr<OperationExpression>(new ConstantExpression(constExpr1)))));
+				ptr<OperationExpression>(new IdentifierExpression(move(ptr<Identifier>(new Identifier("a"))))),
+				move(make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_A))))));
 
 	Variable result = expressionAssignment2.evaluate(globalScope);
 
 	EXPECT_TRUE(firstAssignmentResult.isPrimitive());
 	EXPECT_TRUE(result.isPrimitive());
 
-	EXPECT_TRUE(globalScope.hasPrimitive(*aIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*aIdentifier).isInteger());
+	EXPECT_TRUE(globalScope.hasPrimitive(ID_A));
+	EXPECT_TRUE(globalScope.getPrimitive(ID_A).isInteger());
 
 	EXPECT_EQ(firstAssignmentResult.getPrimitive().getInteger(), INTEGER_VALUE_A * INTEGER_VALUE_B);
-	EXPECT_EQ(globalScope.getPrimitive(*aIdentifier).getInteger(),
-		(INTEGER_VALUE_A * INTEGER_VALUE_B) - INTEGER_VALUE_A);
+	EXPECT_EQ(globalScope.getPrimitive(ID_A).getInteger(), (INTEGER_VALUE_A * INTEGER_VALUE_B) - INTEGER_VALUE_A);
 }
 
 TEST(OperationExpression, Should_Assign_Constants_Multiplication) {
@@ -459,16 +446,14 @@ TEST(OperationExpression, Should_Assign_Constants_Multiplication) {
 		a = 12 * 13
 	*/
 	Object globalScope = Object();
-	ptr<Identifier> aIdentifier = ptr<Identifier>(new Identifier("a"));
-	ConstantExpression constExpr1 = createConstantExpression(INTEGER_VALUE_A);
-	ConstantExpression constExpr2 = createConstantExpression(INTEGER_VALUE_B);
-
-	OperationExpressionAssignment expressionAssignment1 = createMultiplicationAssignment(aIdentifier, constExpr1, constExpr2);
+	OperationExpressionAssignment expressionAssignment1 = createMultiplicationAssignment(move(ptr<Identifier>(new Identifier("a"))), 
+		move(make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_A))), 
+		move(make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_B))));
 	Variable result = expressionAssignment1.evaluate(globalScope);
 
 	EXPECT_TRUE(result.isPrimitive());
-	EXPECT_TRUE(globalScope.hasPrimitive(*aIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*aIdentifier).isInteger());
+	EXPECT_TRUE(globalScope.hasPrimitive(ID_A));
+	EXPECT_TRUE(globalScope.getPrimitive(ID_A).isInteger());
 	EXPECT_EQ(result.getPrimitive().getInteger(), INTEGER_VALUE_A * INTEGER_VALUE_B);
 }
 
@@ -479,56 +464,47 @@ TEST(OperationExpression, Should_Assign_Variables_Subtraction_Properly) {
 		c = b - a
 	*/
 	Object globalScope = Object();
-	ptr<Identifier> aIdentifier = ptr<Identifier>(new Identifier("a"));
-	ConstantExpression aConstantExpression = createConstantExpression(INTEGER_VALUE_A);
-
-	OperationExpressionAssignment aExpressionAssignment = createOpAssignExpr(aIdentifier, aConstantExpression);
+	
+	ptr<ConstantExpression> aConstantExpression = make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_A));
+	OperationExpressionAssignment aExpressionAssignment = createOpAssignExpr(move(ptr<Identifier>(new Identifier("a"))), move(aConstantExpression));
 
 	Variable constantAssignmentResult = aExpressionAssignment.evaluate(globalScope);
-
-	ptr<Identifier> bIdentifier = ptr<Identifier>(new Identifier("b"));
-	ConstantExpression sumConstantExpression = createConstantExpression(INTEGER_VALUE_B);
-	IdentifierExpression aIdExpression = IdentifierExpression(ptr<Identifier>(aIdentifier));
-
-	OperationExpressionAssignment bExpressionAssignment =
-		OperationExpressionAssignment(ptr<Identifier>(bIdentifier),
-			ptr<OperationExpression>(new Addition(
-				ptr<OperationExpression>(new ConstantExpression(sumConstantExpression)),
-				ptr<OperationExpression>(new IdentifierExpression(aIdExpression)))));
+	
+	ptr<ConstantExpression> sumConstantExpression = make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_B));
+	OperationExpressionAssignment bExpressionAssignment = OperationExpressionAssignment(move(ptr<Identifier>(new Identifier("b"))),
+														ptr<OperationExpression>(new Addition(
+															move(sumConstantExpression),
+															ptr<OperationExpression>(new IdentifierExpression(move(ptr<Identifier>(new Identifier("a"))))))));
 
 	Variable bAssignmentResult = bExpressionAssignment.evaluate(globalScope);
 
-	ptr<Identifier> cIdentifier =
-		ptr<Identifier>(new Identifier("c"));
-
-	OperationExpressionAssignment cExpressionAssignment =
-		OperationExpressionAssignment(ptr<Identifier>(cIdentifier),
+	OperationExpressionAssignment cExpressionAssignment = OperationExpressionAssignment(move(ptr<Identifier>(new Identifier("c"))),
 			ptr<OperationExpression>(new Multiplication(
-				ptr<OperationExpression>(new IdentifierExpression(aIdExpression)),
-				ptr<OperationExpression>(new IdentifierExpression(ptr<Identifier>(bIdentifier))))));
+				ptr<OperationExpression>(new IdentifierExpression(move(ptr<Identifier>(new Identifier("a"))))),
+				ptr<OperationExpression>(new IdentifierExpression(move(ptr<Identifier>(new Identifier("b"))))))));
 
 	Variable result = cExpressionAssignment.evaluate(globalScope);
 
 	EXPECT_TRUE(constantAssignmentResult.isPrimitive());
-	EXPECT_TRUE(globalScope.hasPrimitive(*aIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*aIdentifier).isInteger());
+	EXPECT_TRUE(globalScope.hasPrimitive(ID_A));
+	EXPECT_TRUE(globalScope.getPrimitive(ID_A).isInteger());
 
 	EXPECT_TRUE(bAssignmentResult.isPrimitive());
-	EXPECT_TRUE(globalScope.hasPrimitive(*bIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*bIdentifier).isInteger());
+	EXPECT_TRUE(globalScope.hasPrimitive(ID_B));
+	EXPECT_TRUE(globalScope.getPrimitive(ID_B).isInteger());
 
 	EXPECT_TRUE(result.isPrimitive());
-	EXPECT_TRUE(globalScope.hasPrimitive(*cIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*cIdentifier).isInteger());
+	EXPECT_TRUE(globalScope.hasPrimitive(ID_C));
+	EXPECT_TRUE(globalScope.getPrimitive(ID_C).isInteger());
 
 	EXPECT_EQ(constantAssignmentResult.getPrimitive().getInteger(), INTEGER_VALUE_A);
 	EXPECT_EQ(bAssignmentResult.getPrimitive().getInteger(), INTEGER_VALUE_A + INTEGER_VALUE_B);
 
-	EXPECT_EQ(globalScope.getPrimitive(*aIdentifier).getInteger(), INTEGER_VALUE_A);
-	EXPECT_EQ(globalScope.getPrimitive(*bIdentifier).getInteger(), INTEGER_VALUE_A + INTEGER_VALUE_B);
+	EXPECT_EQ(globalScope.getPrimitive(ID_A).getInteger(), INTEGER_VALUE_A);
+	EXPECT_EQ(globalScope.getPrimitive(ID_B).getInteger(), INTEGER_VALUE_A + INTEGER_VALUE_B);
 
 	EXPECT_EQ(result.getPrimitive().getInteger(), INTEGER_VALUE_A * (INTEGER_VALUE_A + INTEGER_VALUE_B));
-	EXPECT_EQ(globalScope.getPrimitive(*cIdentifier).getInteger(), INTEGER_VALUE_A * (INTEGER_VALUE_A + INTEGER_VALUE_B));
+	EXPECT_EQ(globalScope.getPrimitive(ID_C).getInteger(), INTEGER_VALUE_A * (INTEGER_VALUE_A + INTEGER_VALUE_B));
 }
 
 TEST(OperationExpression, Should_Increment_Variable_Properly) {
@@ -537,27 +513,28 @@ TEST(OperationExpression, Should_Increment_Variable_Properly) {
 		++a
 	*/
 	Object globalScope = Object();
-	ptr<Identifier> aIdentifier = ptr<Identifier>(new Identifier("a"));
-	ConstantExpression aConstantExpression = createConstantExpression(INTEGER_VALUE_A);
+	
+	ptr<ConstantExpression> aConstantExpression = make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_A));
+	OperationExpressionAssignment aExpressionAssignment = createOpAssignExpr(move(ptr<Identifier>(new Identifier("a"))), move(aConstantExpression));
 
-	OperationExpressionAssignment expressionAssignment1 = createOpAssignExpr(aIdentifier, aConstantExpression);
-
-	Variable assignmentResult = expressionAssignment1.evaluate(globalScope);
-	ConstantExpression oneConstantExpression = createConstantExpression(1);
-	OperationExpressionAssignment expressionAssignment2 = createAdditionAssignment(aIdentifier, oneConstantExpression);
-
+	Variable assignmentResult = aExpressionAssignment.evaluate(globalScope);
+	ptr<ConstantExpression> oneConstantExpression = make_unique<ConstantExpression>(createConstantExpression(1));
+	OperationExpressionAssignment expressionAssignment2 = OperationExpressionAssignment(move(ptr<Identifier>(new Identifier("a"))),
+								ptr<OperationExpression>(new Addition(ptr<OperationExpression>(
+									new IdentifierExpression(move(ptr<Identifier>(new Identifier("a"))))), move(oneConstantExpression))));
+	
 	Variable result = expressionAssignment2.evaluate(globalScope);
 
 	EXPECT_TRUE(assignmentResult.isPrimitive());
+	
 	EXPECT_TRUE(result.isPrimitive());
-	EXPECT_TRUE(globalScope.hasPrimitive(*aIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*aIdentifier).isInteger());
+	EXPECT_TRUE(globalScope.hasPrimitive(ID_A));
+	EXPECT_TRUE(globalScope.getPrimitive(ID_A).isInteger());
 
 	EXPECT_EQ(assignmentResult.getPrimitive().getInteger(), INTEGER_VALUE_A);
 	EXPECT_EQ(result.getPrimitive().getInteger(), INTEGER_VALUE_A + 1);
-	EXPECT_EQ(globalScope.getPrimitive(*aIdentifier).getInteger(), INTEGER_VALUE_A + 1);
+	EXPECT_EQ(globalScope.getPrimitive(ID_A).getInteger(), INTEGER_VALUE_A + 1);
 }
-
 
 TEST(OperationExpression, Should_Negate_Variable_Properly) {
 	/*
@@ -565,28 +542,25 @@ TEST(OperationExpression, Should_Negate_Variable_Properly) {
 		a = -a
 	*/
 	Object globalScope = Object();
-	ptr<Identifier> aIdentifier = ptr<Identifier>(new Identifier("a"));
-	ConstantExpression constExpr1 = createConstantExpression(INTEGER_VALUE_A);
-	ConstantExpression constExpr2 = createConstantExpression(INTEGER_VALUE_B);
+	
+	ptr<ConstantExpression> constExpr1 = make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_A));
+	ptr<ConstantExpression> constExpr2 = make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_B));
 
-	OperationExpressionAssignment expressionAssignment1 = createMultiplicationAssignment(aIdentifier, constExpr1, constExpr2);
+	OperationExpressionAssignment expressionAssignment1 = createMultiplicationAssignment(move(ptr<Identifier>(new Identifier("a"))), move(constExpr1), move(constExpr2));
 	Variable firstAssignmentResult = expressionAssignment1.evaluate(globalScope);
-	OperationExpressionAssignment expressionAssignment2 =
-		OperationExpressionAssignment(ptr<Identifier>(aIdentifier),
-			ptr<OperationExpression>(new Negation(
-				ptr<OperationExpression>(new IdentifierExpression(ptr<Identifier>(aIdentifier))))));
+	OperationExpressionAssignment expressionAssignment2 = OperationExpressionAssignment(move(ptr<Identifier>(new Identifier("a"))),
+			ptr<OperationExpression>(new Negation(ptr<OperationExpression>(new IdentifierExpression(move(ptr<Identifier>(new Identifier("a"))))))));
 
 	Variable result = expressionAssignment2.evaluate(globalScope);
 
 	EXPECT_TRUE(firstAssignmentResult.isPrimitive());
 	EXPECT_TRUE(result.isPrimitive());
 
-	EXPECT_TRUE(globalScope.hasPrimitive(*aIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*aIdentifier).isInteger());
+	EXPECT_TRUE(globalScope.hasPrimitive(ID_A));
+	EXPECT_TRUE(globalScope.getPrimitive(ID_A).isInteger());
 
 	EXPECT_EQ(firstAssignmentResult.getPrimitive().getInteger(), INTEGER_VALUE_A * INTEGER_VALUE_B);
-	EXPECT_EQ(globalScope.getPrimitive(*aIdentifier).getInteger(),
-		-(INTEGER_VALUE_A * INTEGER_VALUE_B));
+	EXPECT_EQ(globalScope.getPrimitive(ID_A).getInteger(), -(INTEGER_VALUE_A * INTEGER_VALUE_B));
 }
 
 TEST(OperationExpression, Should_Logically_Negate_Boolean_Variable_Properly) {
@@ -595,29 +569,26 @@ TEST(OperationExpression, Should_Logically_Negate_Boolean_Variable_Properly) {
 		a = !a
 	*/
 	Object globalScope = Object();
-	ptr<Identifier> aIdentifier = ptr<Identifier>(new Identifier("a"));
+	
 	Variable variable1 = Variable(BOOLEAN_VALUE_TRUE);
-	ConstantExpression constantExpression1 = ConstantExpression(ptr<Variable>(new Variable(variable1)));
+	ptr<ConstantExpression> constantExpression1 = make_unique<ConstantExpression>(ptr<Variable>(new Variable(variable1)));
 
-	OperationExpressionAssignment expressionAssignment1 = createOpAssignExpr(aIdentifier, constantExpression1);
-
+	OperationExpressionAssignment expressionAssignment1 = createOpAssignExpr(move(ptr<Identifier>(new Identifier("a"))), move(constantExpression1));
 	Variable firstAssignmentResult = expressionAssignment1.evaluate(globalScope);
 
-	OperationExpressionAssignment expressionAssignment2 =
-		OperationExpressionAssignment(ptr<Identifier>(aIdentifier),
-			ptr<OperationExpression>(new LogicalNot(
-				ptr<OperationExpression>(new IdentifierExpression(ptr<Identifier>(aIdentifier))))));
+	OperationExpressionAssignment expressionAssignment2 = OperationExpressionAssignment(move(ptr<Identifier>(new Identifier("a"))),
+			ptr<OperationExpression>(new LogicalNot(ptr<OperationExpression>(new IdentifierExpression(move(ptr<Identifier>(new Identifier("a"))))))));
 
 	Variable result = expressionAssignment2.evaluate(globalScope);
 
 	EXPECT_TRUE(firstAssignmentResult.isPrimitive());
 	EXPECT_TRUE(result.isPrimitive());
 
-	EXPECT_TRUE(globalScope.hasPrimitive(*aIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*aIdentifier).isBoolean());
+	EXPECT_TRUE(globalScope.hasPrimitive(ID_A));
+	EXPECT_TRUE(globalScope.getPrimitive(ID_A).isBoolean());
 
 	EXPECT_EQ(firstAssignmentResult.getPrimitive().getBoolean(), BOOLEAN_VALUE_TRUE);
-	EXPECT_EQ(globalScope.getPrimitive(*aIdentifier).getBoolean(), BOOLEAN_VALUE_FALSE);
+	EXPECT_EQ(globalScope.getPrimitive(ID_A).getBoolean(), BOOLEAN_VALUE_FALSE);
 }
 
 TEST(OperationExpression, Should_Compare_Variables_Properly) {
@@ -627,55 +598,49 @@ TEST(OperationExpression, Should_Compare_Variables_Properly) {
 		c = a >= b
 	*/
 	Object globalScope = Object();
-	ptr<Identifier> aIdentifier = ptr<Identifier>(new Identifier("a"));
-	ConstantExpression aConstantExpression = createConstantExpression(INTEGER_VALUE_A);
-
-	OperationExpressionAssignment aExpressionAssignment = createOpAssignExpr(aIdentifier, aConstantExpression);
+	
+	ptr<ConstantExpression> aConstantExpression = make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_A));
+	OperationExpressionAssignment aExpressionAssignment = createOpAssignExpr(move(ptr<Identifier>(new Identifier("a"))), move(aConstantExpression));
 	Variable constantAssignmentResult = aExpressionAssignment.evaluate(globalScope);
 
-	ptr<Identifier> bIdentifier = ptr<Identifier>(new Identifier("b"));
-	ConstantExpression sumConstantExpression = createConstantExpression(INTEGER_VALUE_B);
+	ptr<ConstantExpression> sumConstantExpression = make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_B));
+	IdentifierExpression aIdExpression = IdentifierExpression(move(ptr<Identifier>(new Identifier("a"))));
 
-	IdentifierExpression aIdExpression = IdentifierExpression(ptr<Identifier>(aIdentifier));
-
-	OperationExpressionAssignment bExpressionAssignment =
-		OperationExpressionAssignment(ptr<Identifier>(bIdentifier),
+	OperationExpressionAssignment bExpressionAssignment = OperationExpressionAssignment(move(ptr<Identifier>(new Identifier("b"))),
 			ptr<OperationExpression>(new Addition(
-				ptr<OperationExpression>(new ConstantExpression(sumConstantExpression)),
-				ptr<OperationExpression>(new IdentifierExpression(aIdExpression)))));
+				move(sumConstantExpression),
+				ptr<OperationExpression>(new IdentifierExpression(move(ptr<Identifier>(new Identifier("a"))))))));
 
 	Variable bAssignmentResult = bExpressionAssignment.evaluate(globalScope);
-
 	Identifier* cIdentifier = new Identifier("c");
 
-	OperationExpressionAssignment cExpressionAssignment =
-		OperationExpressionAssignment(ptr<Identifier>(cIdentifier),
+	OperationExpressionAssignment cExpressionAssignment =OperationExpressionAssignment(ptr<Identifier>(ptr<Identifier>(new Identifier("c"))),
 			ptr<OperationExpression>(new GreaterThanOrEqualTo(
-				ptr<OperationExpression>(new IdentifierExpression(aIdExpression)),
-				ptr<OperationExpression>(new IdentifierExpression(ptr<Identifier>(bIdentifier))))));
+				ptr<OperationExpression>(new IdentifierExpression(move(ptr<Identifier>(new Identifier("a"))))),
+				ptr<OperationExpression>(new IdentifierExpression(move(ptr<Identifier>(new Identifier("b"))))))));
 
 	Variable result = cExpressionAssignment.evaluate(globalScope);
 
 	EXPECT_TRUE(constantAssignmentResult.isPrimitive());
-	EXPECT_TRUE(globalScope.hasPrimitive(*aIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*aIdentifier).isInteger());
+	EXPECT_TRUE(globalScope.hasPrimitive(ID_A));
+	EXPECT_TRUE(globalScope.getPrimitive(ID_A).isInteger());
 
 	EXPECT_TRUE(bAssignmentResult.isPrimitive());
-	EXPECT_TRUE(globalScope.hasPrimitive(*bIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*bIdentifier).isInteger());
+	EXPECT_TRUE(globalScope.hasPrimitive(ID_B));
+	EXPECT_TRUE(globalScope.getPrimitive(ID_B).isInteger());
 
 	EXPECT_TRUE(result.isPrimitive());
-	EXPECT_TRUE(globalScope.hasPrimitive(*cIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*cIdentifier).isBoolean());
+	EXPECT_TRUE(globalScope.hasPrimitive(ID_C));
+	EXPECT_TRUE(globalScope.getPrimitive(ID_C).isBoolean());
 
 	EXPECT_EQ(constantAssignmentResult.getPrimitive().getInteger(), INTEGER_VALUE_A);
 	EXPECT_EQ(bAssignmentResult.getPrimitive().getInteger(), INTEGER_VALUE_A + INTEGER_VALUE_B);
 
-	EXPECT_EQ(globalScope.getPrimitive(*aIdentifier).getInteger(), INTEGER_VALUE_A);
-	EXPECT_EQ(globalScope.getPrimitive(*bIdentifier).getInteger(), INTEGER_VALUE_A + INTEGER_VALUE_B);
+	EXPECT_EQ(globalScope.getPrimitive(ID_A).getInteger(), INTEGER_VALUE_A);
+	EXPECT_EQ(globalScope.getPrimitive(ID_B).getInteger(), INTEGER_VALUE_A + INTEGER_VALUE_B);
 
 	EXPECT_EQ(result.getPrimitive().getBoolean(), BOOLEAN_VALUE_FALSE);
-	EXPECT_EQ(globalScope.getPrimitive(*cIdentifier).getBoolean(), BOOLEAN_VALUE_FALSE);
+	EXPECT_EQ(globalScope.getPrimitive(ID_C).getBoolean(), BOOLEAN_VALUE_FALSE);
 }
 
 TEST(OperationExpression, Should_Compare_Variable_And_Constant_Properly) {
@@ -684,520 +649,131 @@ TEST(OperationExpression, Should_Compare_Variable_And_Constant_Properly) {
 		b = a == 12
 	*/
 	Object globalScope = Object();
-	ptr<Identifier> aIdentifier = ptr<Identifier>(new Identifier("a"));
-	ConstantExpression aConstantExpression = createConstantExpression(INTEGER_VALUE_A);
-
-	OperationExpressionAssignment aExpressionAssignment = createOpAssignExpr(aIdentifier, aConstantExpression);
+	
+	OperationExpressionAssignment aExpressionAssignment = createOpAssignExpr(move(ptr<Identifier>(new Identifier("a"))), 
+		move(make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_A))));
 	Variable constantAssignmentResult = aExpressionAssignment.evaluate(globalScope);
 
-	ptr<Identifier> bIdentifier = ptr<Identifier>(new Identifier("b"));
-	IdentifierExpression aIdExpression = IdentifierExpression(ptr<Identifier>(aIdentifier));
+	IdentifierExpression aIdExpression = IdentifierExpression(move(ptr<Identifier>(new Identifier("a"))));
 
-	OperationExpressionAssignment bExpressionAssignment =
-		OperationExpressionAssignment(ptr<Identifier>(bIdentifier),
+	OperationExpressionAssignment bExpressionAssignment = OperationExpressionAssignment(move(ptr<Identifier>(new Identifier("b"))),
 			ptr<OperationExpression>(new Equals(
-				ptr<OperationExpression>(new ConstantExpression(aConstantExpression)),
-				ptr<OperationExpression>(new IdentifierExpression(aIdExpression)))));
+				move(make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_A))),
+				ptr<OperationExpression>(new IdentifierExpression(move(ptr<Identifier>(new Identifier("a"))))))));
 
 	Variable result = bExpressionAssignment.evaluate(globalScope);
 
 	EXPECT_TRUE(constantAssignmentResult.isPrimitive());
-	EXPECT_TRUE(globalScope.hasPrimitive(*aIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*aIdentifier).isInteger());
+	EXPECT_TRUE(globalScope.hasPrimitive(ID_A));
+	EXPECT_TRUE(globalScope.getPrimitive(ID_A).isInteger());
 
 	EXPECT_TRUE(result.isPrimitive());
-	EXPECT_TRUE(globalScope.hasPrimitive(*bIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*bIdentifier).isBoolean());
+	EXPECT_TRUE(globalScope.hasPrimitive(ID_B));
+	EXPECT_TRUE(globalScope.getPrimitive(ID_B).isBoolean());
 
 	EXPECT_EQ(constantAssignmentResult.getPrimitive().getInteger(), INTEGER_VALUE_A);
-	EXPECT_EQ(globalScope.getPrimitive(*aIdentifier).getInteger(), INTEGER_VALUE_A);
+	EXPECT_EQ(globalScope.getPrimitive(ID_A).getInteger(), INTEGER_VALUE_A);
 
 	EXPECT_EQ(result.getPrimitive().getBoolean(), BOOLEAN_VALUE_TRUE);
-	EXPECT_EQ(globalScope.getPrimitive(*bIdentifier).getBoolean(), BOOLEAN_VALUE_TRUE);
-}
-
-/* STATEMENTS */
-
-TEST(ConditionalStatement, Should_Execute_Positive_Block_When_True_Condition) {
-	/*
-		if (true) { a = 12 }
-	*/
-	Object globalScope = Object();
-	StatementsList* trueStatementsList = new StatementsList();
-	ptr<Identifier> aIdentifier = ptr<Identifier>(new Identifier("a"));
-
-	ConstantExpression aConstantExpression = createConstantExpression(INTEGER_VALUE_A);
-	OperationExpressionAssignment aExpressionAssignment = createOpAssignExpr(aIdentifier, aConstantExpression);
-
-	ExpressionStatement expressionStatement = ExpressionStatement(ptr<OperationExpression>(
-			new OperationExpressionAssignment(aExpressionAssignment))
-	);
-
-	trueStatementsList->add(ptr<Statement>(new ExpressionStatement(expressionStatement)));
-	ConstantExpression condition = ConstantExpression(ptr<Variable>(new Variable(true)));
-	ConditionalStatement conditionalStatement = ConditionalStatement(ptr<OperationExpression>(
-			new ConstantExpression(condition)), ptr<StatementsList>(trueStatementsList)
-	);
-
-	conditionalStatement.evaluate(globalScope);
-
-	EXPECT_TRUE(globalScope.hasPrimitive(*aIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*aIdentifier).isInteger());
-
-	EXPECT_EQ(globalScope.getPrimitive(*aIdentifier).getInteger(), INTEGER_VALUE_A);
-}
-
-TEST(ConditionalStatement, Should_Not_Execute_Positive_Block_When_Condition_Evaluates_To_False) {
-	/*
-		a = 12
-		if ( a > 13 ) { a = a + 13 }
-	*/
-	Object globalScope = Object();
-	StatementsList* trueStatementsList = new StatementsList();
-	ptr<Identifier> aIdentifier = ptr<Identifier>(new Identifier("a"));
-	ConstantExpression aConstantExpression = createConstantExpression(INTEGER_VALUE_A);
-	OperationExpressionAssignment aExpressionAssignment = createOpAssignExpr(aIdentifier, aConstantExpression);
-
-	Variable constantAssignmentResult = aExpressionAssignment.evaluate(globalScope);
-	ConstantExpression bConstantExpression = createConstantExpression(INTEGER_VALUE_B);
-
-	GreaterThan condition = GreaterThan(
-		ptr<OperationExpression>(new IdentifierExpression(ptr<Identifier>(aIdentifier))),
-		ptr<OperationExpression>(new ConstantExpression(bConstantExpression))
-	);
-
-	Variable conditionResult = condition.evaluate(globalScope);
-	OperationExpressionAssignment aExpressionAssignment2 = createAdditionAssignment(aIdentifier, bConstantExpression);
-
-	ExpressionStatement expressionStatement = ExpressionStatement(ptr<OperationExpression>(
-			new OperationExpressionAssignment(aExpressionAssignment2))
-	);
-
-	trueStatementsList->add(ptr<Statement>(new ExpressionStatement(expressionStatement)));
-
-	ConditionalStatement conditionalStatement = ConditionalStatement(ptr<OperationExpression>(
-			new GreaterThan(condition)), ptr<StatementsList>(trueStatementsList)
-	);
-
-	conditionalStatement.evaluate(globalScope);
-
-	EXPECT_TRUE(constantAssignmentResult.isPrimitive());
-	EXPECT_TRUE(globalScope.hasPrimitive(*aIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*aIdentifier).isInteger());
-	EXPECT_TRUE(conditionResult.getPrimitive().isBoolean());
-
-	EXPECT_EQ(conditionResult.getPrimitive().getBoolean(), BOOLEAN_VALUE_FALSE);
-	EXPECT_EQ(constantAssignmentResult.getPrimitive().getInteger(), INTEGER_VALUE_A);
-	EXPECT_EQ(globalScope.getPrimitive(*aIdentifier).getInteger(), INTEGER_VALUE_A);
-}
-
-TEST(ConditionalStatement, Should_Execute_Positive_Block_When_Condition_Evaluates_To_True) {
-	/*
-		a = 12
-		if ( a <= 13 ) { a = a + 13 }
-		else {  }
-	*/
-	Object globalScope = Object();
-	StatementsList* trueStatementsList = new StatementsList();
-	StatementsList* falseStatementsList = new StatementsList();
-
-	ptr<Identifier> aIdentifier = ptr<Identifier>(new Identifier("a"));
-	ConstantExpression aConstantExpression = createConstantExpression(INTEGER_VALUE_A);
-	OperationExpressionAssignment aExpressionAssignment = createOpAssignExpr(aIdentifier, aConstantExpression);
-
-	Variable constantAssignmentResult = aExpressionAssignment.evaluate(globalScope);
-	ConstantExpression bConstantExpression = createConstantExpression(INTEGER_VALUE_B);
-
-	LessThanOrEqualTo condition = LessThanOrEqualTo(
-		ptr<OperationExpression>(new IdentifierExpression(ptr<Identifier>(aIdentifier))),
-		ptr<OperationExpression>(new ConstantExpression(bConstantExpression))
-	);
-
-	Variable conditionResult = condition.evaluate(globalScope);
-	OperationExpressionAssignment aExpressionAssignment2 = createAdditionAssignment(aIdentifier, bConstantExpression);
-	ExpressionStatement expressionStatement = ExpressionStatement(ptr<OperationExpression>(
-			new OperationExpressionAssignment(aExpressionAssignment2))
-	);
-
-	trueStatementsList->add(ptr<Statement>(new ExpressionStatement(expressionStatement)));
-
-	ConditionalStatement conditionalStatement = ConditionalStatement(ptr<OperationExpression>(
-			new LessThanOrEqualTo(condition)), ptr<StatementsList>(trueStatementsList)
-	);
-
-	conditionalStatement.evaluate(globalScope);
-
-	EXPECT_TRUE(constantAssignmentResult.isPrimitive());
-	EXPECT_TRUE(globalScope.hasPrimitive(*aIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*aIdentifier).isInteger());
-	EXPECT_TRUE(conditionResult.getPrimitive().isBoolean());
-
-	EXPECT_EQ(conditionResult.getPrimitive().getBoolean(), BOOLEAN_VALUE_TRUE);
-	EXPECT_EQ(constantAssignmentResult.getPrimitive().getInteger(), INTEGER_VALUE_A);
-	EXPECT_EQ(globalScope.getPrimitive(*aIdentifier).getInteger(), INTEGER_VALUE_A + INTEGER_VALUE_B);
-}
-
-TEST(ConditionalStatement, Should_Execute_False_Block_When_Condition_Evaluates_To_False) {
-	/*
-		a = 12
-		if ( a > 13 ) {}
-		else { a = a * 13 }
-	*/
-	Object globalScope = Object();
-	StatementsList* trueStatementsList = new StatementsList();
-	StatementsList* falseStatementsList = new StatementsList();
-
-	ptr<Identifier> aIdentifier = ptr<Identifier>(new Identifier("a"));
-	ConstantExpression aConstantExpression = createConstantExpression(INTEGER_VALUE_A);
-	OperationExpressionAssignment aExpressionAssignment = createOpAssignExpr(aIdentifier, aConstantExpression);
-
-	Variable constantAssignmentResult = aExpressionAssignment.evaluate(globalScope);
-	ConstantExpression bConstantExpression = createConstantExpression(INTEGER_VALUE_B);
-
-	GreaterThan condition = GreaterThan(
-		ptr<OperationExpression>(new IdentifierExpression(ptr<Identifier>(aIdentifier))),
-		ptr<OperationExpression>(new ConstantExpression(bConstantExpression))
-	);
-
-	Variable conditionResult = condition.evaluate(globalScope);
-
-	OperationExpressionAssignment aExpressionAssignment2 =
-		OperationExpressionAssignment(ptr<Identifier>(aIdentifier),
-			ptr<OperationExpression>(new Multiplication(
-				ptr<OperationExpression>(new IdentifierExpression(ptr<Identifier>(aIdentifier))),
-				ptr<OperationExpression>(new ConstantExpression(bConstantExpression))
-			)));
-
-	ExpressionStatement expressionStatement = ExpressionStatement(ptr<OperationExpression>(
-			new OperationExpressionAssignment(aExpressionAssignment2))
-	);
-
-	falseStatementsList->add(ptr<Statement>(new ExpressionStatement(expressionStatement)));
-
-	ConditionalStatement conditionalStatement = ConditionalStatement(ptr<OperationExpression>(
-			new GreaterThan(condition)),
-		ptr<StatementsList>(trueStatementsList),
-		ptr<StatementsList>(falseStatementsList)
-	);
-
-	conditionalStatement.evaluate(globalScope);
-
-	EXPECT_TRUE(constantAssignmentResult.isPrimitive());
-	EXPECT_TRUE(globalScope.hasPrimitive(*aIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*aIdentifier).isInteger());
-	EXPECT_TRUE(conditionResult.getPrimitive().isBoolean());
-
-	EXPECT_EQ(conditionResult.getPrimitive().getBoolean(), BOOLEAN_VALUE_FALSE);
-	EXPECT_EQ(constantAssignmentResult.getPrimitive().getInteger(), INTEGER_VALUE_A);
-	EXPECT_EQ(globalScope.getPrimitive(*aIdentifier).getInteger(), INTEGER_VALUE_A * INTEGER_VALUE_B);
-}
-
-TEST(ReturnStatement, Should_Throw_ReturnVariable_Exception) {
-	Object globalScope = Object();
-	ConstantExpression aConstantExpression = createConstantExpression(INTEGER_VALUE_A);
-
-	ReturnStatement returnStatement = ReturnStatement(
-		ptr<OperationExpression>(new ConstantExpression(aConstantExpression))
-	);
-
-	EXPECT_THROW({ 
-		try {
-			returnStatement.evaluate(globalScope);
-		}
-		catch (const ReturnVariable &returnVar) {
-			throw;
-		} 
-	}, ReturnVariable);
-}
-TEST(ReturnStatement, Should_Throw_Filled_ReturnVariable_Exception) {
-	Object globalScope = Object();
-	ConstantExpression aConstantExpression = createConstantExpression(INTEGER_VALUE_A);
-
-	ReturnStatement returnStatement = ReturnStatement(
-		ptr<OperationExpression>(new ConstantExpression(aConstantExpression))
-	);
-
-	EXPECT_THROW({ 
-			try {
-				returnStatement.evaluate(globalScope);
-			}
-			catch (const ReturnVariable &returnVar) {
-
-			Variable result = returnVar.getVariable();
-
-			EXPECT_TRUE(result.isPrimitive());
-			EXPECT_TRUE(result.getPrimitive().isInteger());
-			EXPECT_EQ(result.getPrimitive().getInteger(), INTEGER_VALUE_A);
-			throw;
-		} 
-	}, ReturnVariable);
-}
-
-TEST(IterationStatement, Should_Iterate_While_Condition_Is_True) {
-	Object globalScope = Object();
-	StatementsList* statementsList = new StatementsList();
-	
-	ptr<Identifier> aIdentifier = ptr<Identifier>(new Identifier("a"));
-	ConstantExpression aConstantExpression = createConstantExpression(INTEGER_VALUE_A);
-	OperationExpressionAssignment aExpressionAssignment = createOpAssignExpr(aIdentifier, aConstantExpression);
-
-	Variable constantAssignmentResult = aExpressionAssignment.evaluate(globalScope);
-	ConstantExpression bConstantExpression = createConstantExpression(INTEGER_VALUE_B);
-
-	LessThan condition = LessThan(
-		ptr<OperationExpression>(new IdentifierExpression(ptr<Identifier>(aIdentifier))),
-		ptr<OperationExpression>(new ConstantExpression(bConstantExpression))
-	);
-
-	ConstantExpression oneConstantExpression = createConstantExpression(1);
-	OperationExpressionAssignment loopExpression = createAdditionAssignment(aIdentifier, oneConstantExpression);
-	ExpressionStatement expressionStatement = ExpressionStatement(
-		ptr<OperationExpression>(new OperationExpressionAssignment(loopExpression))
-	);
-
-	statementsList->add(ptr<Statement>(new ExpressionStatement(expressionStatement)));
-
-	IterationStatement iterationStatement = IterationStatement(
-		ptr<OperationExpression>(new LessThan(condition)),
-		ptr<StatementsList>(statementsList)
-	);
-
-	iterationStatement.evaluate(globalScope);
-
-	EXPECT_TRUE(globalScope.hasPrimitive(*aIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*aIdentifier).isInteger());
-
-	EXPECT_EQ(globalScope.getPrimitive(*aIdentifier).getInteger(), INTEGER_VALUE_B);
-}
-
-TEST(IterationStatement, Should_Iterate_Certain_number_Of_Times) {
-	Object globalScope = Object();
-	StatementsList* statementsList = new StatementsList();
-
-	ptr<Identifier> aIdentifier = ptr<Identifier>(new Identifier("a"));
-	ConstantExpression aConstantExpression = createConstantExpression(INTEGER_VALUE_A);
-	OperationExpressionAssignment aExpressionAssignment = createOpAssignExpr(aIdentifier, aConstantExpression);
-	aExpressionAssignment.evaluate(globalScope);
-
-	ptr<Identifier> bIdentifier = ptr<Identifier>(new Identifier("b"));
-	ConstantExpression bConstantExpression = createConstantExpression(INTEGER_VALUE_B);
-	OperationExpressionAssignment bExpressionAssignment = createOpAssignExpr(bIdentifier, bConstantExpression);
-	bExpressionAssignment.evaluate(globalScope);
-
-	LessThan condition = LessThan(
-		ptr<OperationExpression>(new IdentifierExpression(ptr<Identifier>(aIdentifier))),
-		ptr<OperationExpression>(new ConstantExpression(bConstantExpression))
-	);
-
-	bConstantExpression = createConstantExpression(0);
-	bExpressionAssignment = createOpAssignExpr(bIdentifier, bConstantExpression);
-	bExpressionAssignment.evaluate(globalScope);
-
-	ConstantExpression oneConstantExpression = createConstantExpression(1);
-	OperationExpressionAssignment loopExpression = createAdditionAssignment(aIdentifier, oneConstantExpression);
-	ExpressionStatement expressionStatement = ExpressionStatement(
-		ptr<OperationExpression>(new OperationExpressionAssignment(loopExpression))
-	);
-
-	OperationExpressionAssignment loopExpression1 =
-		OperationExpressionAssignment(ptr<Identifier>(bIdentifier),
-			ptr<OperationExpression>(new Subtraction(
-				ptr<OperationExpression>(new IdentifierExpression(ptr<Identifier>(bIdentifier))),
-				ptr<OperationExpression>(new ConstantExpression(oneConstantExpression)))));
-
-	ExpressionStatement expressionStatement1 = ExpressionStatement(
-		ptr<OperationExpression>(new OperationExpressionAssignment(loopExpression1))
-	);
-
-	statementsList->add(ptr<Statement>(new ExpressionStatement(expressionStatement)));
-	statementsList->add(ptr<Statement>(new ExpressionStatement(expressionStatement1)));
-	IterationStatement iterationStatement = IterationStatement(
-		ptr<OperationExpression>(new LessThan(condition)),
-		ptr<StatementsList>(statementsList)
-	);
-
-	iterationStatement.evaluate(globalScope);
-	EXPECT_TRUE(globalScope.hasPrimitive(*aIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*aIdentifier).isInteger());
-
-	EXPECT_TRUE(globalScope.hasPrimitive(*bIdentifier));
-	EXPECT_TRUE(globalScope.getPrimitive(*bIdentifier).isInteger());
-
-	EXPECT_EQ(globalScope.getPrimitive(*aIdentifier).getInteger(), INTEGER_VALUE_B);
-	EXPECT_EQ(globalScope.getPrimitive(*bIdentifier).getInteger(), -(INTEGER_VALUE_B - INTEGER_VALUE_A));
+	EXPECT_EQ(globalScope.getPrimitive(ID_B).getBoolean(), BOOLEAN_VALUE_TRUE);
 }
 
 /* FUNCTION */
-TEST(Function, Should_Be_SuccessFully_Constructed_With_No_Parameters) {
-	Object globalScope = Object();
-	StatementsList statementsList = StatementsList();
-	ParametersList parametersList = ParametersList();
+// TEST(Function, Should_Be_SuccessFully_Constructed_With_No_Parameters) {
+// 	Object globalScope = Object();
+// 	StatementsList statementsList = StatementsList();
+// 	ParametersList parametersList = ParametersList();
 
-	Function function = Function(
-		ptr<ParametersList>(new ParametersList(parametersList)),
-		ptr<StatementsList>(new StatementsList(statementsList)));
+// 	Function function = Function(
+// 		ptr<ParametersList>(new ParametersList(parametersList)),
+// 		ptr<StatementsList>(new StatementsList(statementsList)));
 
-	Identifier* functionIdentifier = new Identifier("doSomething");
+// 	Identifier* functionIdentifier = new Identifier("doSomething");
 
-	FunctionAssignment functionAssignemnt = FunctionAssignment(
-		ptr<Identifier>(functionIdentifier), function);
+// 	ptr<OperationExpression> functionAssignemnt = ptr<OperationExpression>(new FunctionAssignment(ptr<Identifier>(functionIdentifier), function));
+// 	ExpressionStatement expressionStatement = ExpressionStatement(move(functionAssignemnt));
+// 	expressionStatement.evaluate(globalScope);
 
-	ExpressionStatement expressionStatement = ExpressionStatement(
-		ptr<OperationExpression>(new FunctionAssignment(functionAssignemnt))
-	);
-	expressionStatement.evaluate(globalScope);
+// 	EXPECT_TRUE(globalScope.hasFunction(*functionIdentifier));
+// }
 
-	EXPECT_TRUE(globalScope.hasFunction(*functionIdentifier));
-}
+// TEST(Function, Should_Be_Called_Successfully_When_Passed_Proper_Number_Of_Arguments) {
+// 	Object globalScope = Object();
+// 	StatementsList statementsList = StatementsList();
+// 	ParametersList parametersList = ParametersList();
+// 	ArgumentsList argumentsList = ArgumentsList();
 
-TEST(Function, Should_Be_Called_Successfully_When_Passed_Proper_Number_Of_Arguments) {
-	Object globalScope = Object();
-	StatementsList statementsList = StatementsList();
-	ParametersList parametersList = ParametersList();
-	ArgumentsList argumentsList = ArgumentsList();
+// 	parametersList.add("a");
+// 	parametersList.add("b");
 
-	parametersList.add("a");
-	parametersList.add("b");
+// 	Function function = Function(
+// 		ptr<ParametersList>(new ParametersList(parametersList)),
+// 		ptr<StatementsList>(new StatementsList(statementsList)));
 
-	Function function = Function(
-		ptr<ParametersList>(new ParametersList(parametersList)),
-		ptr<StatementsList>(new StatementsList(statementsList)));
+// 	ptr<ConstantExpression> aConstantExpression = make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_A));
 
-	ConstantExpression aConstantExpression = createConstantExpression(INTEGER_VALUE_A);
+// 	Variable bVariable = Variable(FLOAT_MINUS_VALUE);
+// 	ptr<ConstantExpression> bConstantExpression = make_unique<ConstantExpression>(ptr<Variable>(new Variable(bVariable)));
 
-	Variable bVariable = Variable(FLOAT_MINUS_VALUE);
-	ConstantExpression bConstantExpression = ConstantExpression(ptr<Variable>(new Variable(bVariable)));
+// 	argumentsList.add(move(aConstantExpression));
+// 	argumentsList.add(move(bConstantExpression));
 
-	argumentsList.add(ptr<OperationExpression>(new ConstantExpression(aConstantExpression)));
-	argumentsList.add(ptr<OperationExpression>(new ConstantExpression(bConstantExpression)));
+// 	EXPECT_NO_THROW({
+// 			Variable functionResult = function.call(globalScope, argumentsList);
+// 		});
+// }
 
-	EXPECT_NO_THROW({
-			Variable functionResult = function.call(globalScope, argumentsList);
-		});
-}
+// TEST(Function, Should_Be_Called_Successfully_When_Passed_Greater_Number_Of_Arguments) {
+// 	Object globalScope = Object();
 
-TEST(Function, Should_Be_Called_Successfully_When_Passed_Greater_Number_Of_Arguments) {
-	Object globalScope = Object();
+// 	StatementsList statementsList = StatementsList();
+// 	ParametersList parametersList = ParametersList();
+// 	ArgumentsList argumentsList = ArgumentsList();
 
-	StatementsList statementsList = StatementsList();
-	ParametersList parametersList = ParametersList();
-	ArgumentsList argumentsList = ArgumentsList();
+// 	parametersList.add("a");
 
-	parametersList.add("a");
+// 	Function function = Function(
+// 		ptr<ParametersList>(new ParametersList(parametersList)),
+// 		ptr<StatementsList>(new StatementsList(statementsList)));
 
-	Function function = Function(
-		ptr<ParametersList>(new ParametersList(parametersList)),
-		ptr<StatementsList>(new StatementsList(statementsList)));
+// 	ptr<ConstantExpression> aConstantExpression = make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_A));
+	
+// 	Variable bVariable = Variable(FLOAT_MINUS_VALUE);
+// 	ptr<ConstantExpression> bConstantExpression = make_unique<ConstantExpression>(ptr<Variable>(new Variable(bVariable)));
 
-	ConstantExpression aConstantExpression = createConstantExpression(INTEGER_VALUE_A);
+// 	argumentsList.add(move(aConstantExpression));
+// 	argumentsList.add(move(bConstantExpression));
 
-	Variable bVariable = Variable(FLOAT_MINUS_VALUE);
-	ConstantExpression bConstantExpression =
-		ConstantExpression(ptr<Variable>(new Variable(bVariable)));
+// 	EXPECT_NO_THROW({
+// 			Variable functionResult = function.call(globalScope, argumentsList);
+// 		});
+// }
 
-	argumentsList.add(ptr<OperationExpression>(new ConstantExpression(aConstantExpression)));
-	argumentsList.add(ptr<OperationExpression>(new ConstantExpression(bConstantExpression)));
+// TEST(Function, Should_Throw_Exception_When_Passed_Not_Enough_Arguments) {
+// 	Object globalScope = Object();
+// 	StatementsList statementsList = StatementsList();
+// 	ParametersList parametersList = ParametersList();
+// 	ArgumentsList argumentsList = ArgumentsList();
 
-	EXPECT_NO_THROW({
-			Variable functionResult = function.call(globalScope, argumentsList);
-		});
-}
+// 	parametersList.add("a");
+// 	parametersList.add("b");
 
-TEST(Function, Should_Throw_Exception_When_Passed_Not_Enough_Arguments) {
-	Object globalScope = Object();
-	StatementsList statementsList = StatementsList();
-	ParametersList parametersList = ParametersList();
-	ArgumentsList argumentsList = ArgumentsList();
+// 	Function function = Function(
+// 		ptr<ParametersList>(new ParametersList(parametersList)),
+// 		ptr<StatementsList>(new StatementsList(statementsList)));
 
-	parametersList.add("a");
-	parametersList.add("b");
+// 	ptr<ConstantExpression> aConstantExpression = make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_A));
 
-	Function function = Function(
-		ptr<ParametersList>(new ParametersList(parametersList)),
-		ptr<StatementsList>(new StatementsList(statementsList)));
+// 	argumentsList.add(move(aConstantExpression));
 
-	ConstantExpression aConstantExpression = createConstantExpression(INTEGER_VALUE_A);
+// 	EXPECT_ANY_THROW({
+// 			Variable functionResult = function.call(globalScope, argumentsList);
+// 		});
+// }
 
-	argumentsList.add(ptr<OperationExpression>(new ConstantExpression(aConstantExpression)));
-
-	EXPECT_ANY_THROW({
-			Variable functionResult = function.call(globalScope, argumentsList);
-		});
-}
-
-TEST(Function, Should_Create_Isolated_Scope) {
-	Object globalScope = Object();
-	StatementsList statementsList = StatementsList();
-	ParametersList parametersList = ParametersList();
-
-	ptr<Identifier> aIdentifier = ptr<Identifier>(new Identifier("a"));
-
-	ConstantExpression aConstantExpression = createConstantExpression(INTEGER_VALUE_A);
-	OperationExpressionAssignment aExpressionAssignment = createOpAssignExpr(aIdentifier, aConstantExpression);
-
-	ExpressionStatement expressionAssignmentStatement = ExpressionStatement(
-		ptr<OperationExpression>(new OperationExpressionAssignment(aExpressionAssignment)));
-
-	statementsList.add(ptr<Statement>(new ExpressionStatement(expressionAssignmentStatement)));
-	ArgumentsList argumentsList = ArgumentsList();
-	Function function = Function(
-		ptr<ParametersList>(new ParametersList(parametersList)),
-		ptr<StatementsList>(new StatementsList(statementsList)));
-
-	Identifier* functIdentifier = new Identifier("funct");
-	globalScope.getFunction(*functIdentifier) = function;
-
-	FunctionCallExpression functionCallExpression = FunctionCallExpression(
-		ptr<Identifier>(functIdentifier),
-		ptr<ArgumentsList>(new ArgumentsList(argumentsList))
-	);
-
-	ExpressionStatement expressionStatement = ExpressionStatement(
-		ptr<OperationExpression>(
-			new FunctionCallExpression(functionCallExpression))
-	);
-
-	expressionStatement.evaluate(globalScope);
-
-	EXPECT_FALSE(globalScope.hasPrimitive(*aIdentifier));
-}
-
-TEST(Function, Should_Return_Variables_Properly) {
-	Object globalScope = Object();
-	StatementsList statementsList = StatementsList();
-	ParametersList parametersList = ParametersList();
-	ptr<Identifier> aIdentifier = ptr<Identifier>(new Identifier("a"));
-	ConstantExpression aConstantExpression = createConstantExpression(INTEGER_VALUE_A);
-	OperationExpressionAssignment aExpressionAssignment = createOpAssignExpr(aIdentifier, aConstantExpression);
-
-	ExpressionStatement expressionAssignmentStatement = ExpressionStatement(
-		ptr<OperationExpression>(new OperationExpressionAssignment(aExpressionAssignment)));
-
-	statementsList.add(ptr<Statement>(new ExpressionStatement(expressionAssignmentStatement)));
-
-	IdentifierExpression aIdentifierExpression = IdentifierExpression(ptr<Identifier>(aIdentifier));
-	ReturnStatement returnStatement = ReturnStatement(ptr<OperationExpression>(new IdentifierExpression(aIdentifierExpression)));
-
-	statementsList.add(ptr<Statement>(new ReturnStatement(returnStatement)));
-	ArgumentsList argumentsList = ArgumentsList();
-	Function function = Function(
-		ptr<ParametersList>(new ParametersList(parametersList)),
-		ptr<StatementsList>(new StatementsList(statementsList)));
-
-	Identifier* functIdentifier = new Identifier("funct");
-	globalScope.getFunction(*functIdentifier) = function;
-
-	FunctionCallExpression functionCallExpression = FunctionCallExpression(
-		ptr<Identifier>(functIdentifier),
-		ptr<ArgumentsList>(new ArgumentsList(argumentsList))
-	);
-
-	Variable result = functionCallExpression.evaluate(globalScope);
-
-	EXPECT_TRUE(result.isPrimitive());
-	EXPECT_TRUE(result.getPrimitive().isInteger());
-	EXPECT_EQ(result.getPrimitive().getInteger(), INTEGER_VALUE_A);
-}
+/*****************************************************************************************************************************************************
+ * 																		PARSER
+*****************************************************************************************************************************************************/
 
 int runParser(string input) {
 	yy_scan_string(input.c_str());

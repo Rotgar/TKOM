@@ -3,12 +3,13 @@
 
 #include <iostream>
 #include <memory>
-using namespace std;
 
 #include "identifier.h"
 #include "primitive.h"
 #include "object.h"
 #include "function.h"
+
+using namespace std;
 
 typedef enum VariableTypes { PRIMITIVE, OBJECT, FUNCTION } ValueTypes;
 
@@ -24,9 +25,9 @@ class Variable {
 public:
     Variable():type(PRIMITIVE), primitivePtr(new Primitive()) {}
     Variable(Primitive p):type(PRIMITIVE), primitivePtr(new Primitive(p)) {}
-    Variable(shared_ptr<Primitive> pPtr):type(PRIMITIVE), primitivePtr(move(pPtr)) {}
-    Variable(shared_ptr<Object> oPtr):type(OBJECT), objectPtr(move(oPtr)) {}
-    Variable(shared_ptr<Function> fPtr):type(FUNCTION), functionPtr(move(fPtr)) {}
+    Variable(unique_ptr<Primitive> pPtr):type(PRIMITIVE), primitivePtr(move(pPtr)) {}
+    Variable(unique_ptr<Object> oPtr):type(OBJECT), objectPtr(move(oPtr)) {}
+    Variable(unique_ptr<Function> fPtr):type(FUNCTION), functionPtr(move(fPtr)) {}
 
     friend ostream& operator<< (ostream&, Variable);
     friend bool     operator== (const Variable&, const Variable&);
@@ -58,6 +59,5 @@ public:
     Object getObject();
     Function getFunction();
 };
-
 
 #endif // VALUE_H_INCLUDED

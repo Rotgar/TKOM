@@ -1,12 +1,13 @@
 #include <iostream>
 #include <memory>
-using namespace std;
 
 #include "variable.h"
 #include "identifier.h"
 #include "primitive.h"
 #include "object.h"
 #include "function.h" 
+
+using namespace std;
 
 bool Variable::isPrimitive() const {
     return this->type == PRIMITIVE;
@@ -80,7 +81,7 @@ Variable::operator bool() const {
 Variable& Variable::operator=(const Variable& var) {
     this->type = var.type;
 
-    if(this->isObject()) this->objectPtr = var.objectPtr;
+    if(this->isObject()) this->objectPtr = move(var.objectPtr);
     else if (this->isFunction()) this->functionPtr = var.functionPtr;
     else if (this->isPrimitive()) this->primitivePtr = var.primitivePtr;
 
@@ -150,4 +151,3 @@ Variable Variable::operator!() const {
     }
     else return *this;
 }
-
