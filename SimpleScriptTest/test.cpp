@@ -32,6 +32,7 @@ using namespace std;
 
 extern int yyparse();
 extern Variable _PARSE_RESULT;
+extern string _ERROR_MESSAGE;
 
 #define INTEGER_VALUE_A 12
 #define INTEGER_VALUE_B 81
@@ -678,99 +679,6 @@ TEST(OperationExpression, Should_Compare_Variable_And_Constant_Properly) {
 	EXPECT_EQ(globalScope.getPrimitive(ID_B).getBoolean(), BOOLEAN_VALUE_TRUE);
 }
 
-/* FUNCTION */
-// TEST(Function, Should_Be_SuccessFully_Constructed_With_No_Parameters) {
-// 	Object globalScope = Object();
-// 	StatementsList statementsList = StatementsList();
-// 	ParametersList parametersList = ParametersList();
-
-// 	Function function = Function(
-// 		ptr<ParametersList>(new ParametersList(parametersList)),
-// 		ptr<StatementsList>(new StatementsList(statementsList)));
-
-// 	Identifier* functionIdentifier = new Identifier("doSomething");
-
-// 	ptr<OperationExpression> functionAssignemnt = ptr<OperationExpression>(new FunctionAssignment(ptr<Identifier>(functionIdentifier), function));
-// 	ExpressionStatement expressionStatement = ExpressionStatement(move(functionAssignemnt));
-// 	expressionStatement.evaluate(globalScope);
-
-// 	EXPECT_TRUE(globalScope.hasFunction(*functionIdentifier));
-// }
-
-// TEST(Function, Should_Be_Called_Successfully_When_Passed_Proper_Number_Of_Arguments) {
-// 	Object globalScope = Object();
-// 	StatementsList statementsList = StatementsList();
-// 	ParametersList parametersList = ParametersList();
-// 	ArgumentsList argumentsList = ArgumentsList();
-
-// 	parametersList.add("a");
-// 	parametersList.add("b");
-
-// 	Function function = Function(
-// 		ptr<ParametersList>(new ParametersList(parametersList)),
-// 		ptr<StatementsList>(new StatementsList(statementsList)));
-
-// 	ptr<ConstantExpression> aConstantExpression = make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_A));
-
-// 	Variable bVariable = Variable(FLOAT_MINUS_VALUE);
-// 	ptr<ConstantExpression> bConstantExpression = make_unique<ConstantExpression>(ptr<Variable>(new Variable(bVariable)));
-
-// 	argumentsList.add(move(aConstantExpression));
-// 	argumentsList.add(move(bConstantExpression));
-
-// 	EXPECT_NO_THROW({
-// 			Variable functionResult = function.call(globalScope, argumentsList);
-// 		});
-// }
-
-// TEST(Function, Should_Be_Called_Successfully_When_Passed_Greater_Number_Of_Arguments) {
-// 	Object globalScope = Object();
-
-// 	StatementsList statementsList = StatementsList();
-// 	ParametersList parametersList = ParametersList();
-// 	ArgumentsList argumentsList = ArgumentsList();
-
-// 	parametersList.add("a");
-
-// 	Function function = Function(
-// 		ptr<ParametersList>(new ParametersList(parametersList)),
-// 		ptr<StatementsList>(new StatementsList(statementsList)));
-
-// 	ptr<ConstantExpression> aConstantExpression = make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_A));
-	
-// 	Variable bVariable = Variable(FLOAT_MINUS_VALUE);
-// 	ptr<ConstantExpression> bConstantExpression = make_unique<ConstantExpression>(ptr<Variable>(new Variable(bVariable)));
-
-// 	argumentsList.add(move(aConstantExpression));
-// 	argumentsList.add(move(bConstantExpression));
-
-// 	EXPECT_NO_THROW({
-// 			Variable functionResult = function.call(globalScope, argumentsList);
-// 		});
-// }
-
-// TEST(Function, Should_Throw_Exception_When_Passed_Not_Enough_Arguments) {
-// 	Object globalScope = Object();
-// 	StatementsList statementsList = StatementsList();
-// 	ParametersList parametersList = ParametersList();
-// 	ArgumentsList argumentsList = ArgumentsList();
-
-// 	parametersList.add("a");
-// 	parametersList.add("b");
-
-// 	Function function = Function(
-// 		ptr<ParametersList>(new ParametersList(parametersList)),
-// 		ptr<StatementsList>(new StatementsList(statementsList)));
-
-// 	ptr<ConstantExpression> aConstantExpression = make_unique<ConstantExpression>(createConstantExpression(INTEGER_VALUE_A));
-
-// 	argumentsList.add(move(aConstantExpression));
-
-// 	EXPECT_ANY_THROW({
-// 			Variable functionResult = function.call(globalScope, argumentsList);
-// 		});
-// }
-
 /*****************************************************************************************************************************************************
  * 																		PARSER
 *****************************************************************************************************************************************************/
@@ -916,18 +824,28 @@ TEST(Parser, Should_Fail_When_Assigning_Undeclared_Variable) {
 	int result = runParser(input);
 
 	EXPECT_EQ(result, PARSE_RESULT_FAILITURE);
+	EXPECT_EQ(_ERROR_MESSAGE, "[ERROR]\tInvalid identifier: Error! Undefined identifier.");
 }
 
-TEST(Parser, Should_Init_Undefined_Variable_With_0) {
+TEST(Parser, Should_Fail_When_Single_Variable_Declared_Without_Var) {
 	ostringstream inputStream;
-	inputStream << "b; a = b; return a;";
+	inputStream << "a; return;";
+
+	string input = inputStream.str();
+	int result = runParser(input);
+	
+	EXPECT_EQ(result, PARSE_RESULT_SUCCESS);
+	EXPECT_EQ(_ERROR_MESSAGE, "[ERROR]\tInvalid identifier: Error! Undefined identifier.");
+}
+
+TEST(Parser, Should_Fail_When_Multiple_Variables_Declared_Without_Var) {
+	ostringstream inputStream;
+	inputStream << "a, b, c; return;";
 
 	string input = inputStream.str();
 	int result = runParser(input);
 
-	EXPECT_EQ(result, PARSE_RESULT_SUCCESS);
-	EXPECT_TRUE(_PARSE_RESULT.getPrimitive().isFloat());
-	EXPECT_EQ(_PARSE_RESULT.getPrimitive().getInteger(), 0);
+	EXPECT_EQ(result, PARSE_RESULT_FAILITURE);
 }
 
 TEST(Parser, Should_Assign_Variable_And_Return) {
@@ -1147,7 +1065,7 @@ TEST(Parser, Should_Return_True_When_Type_Comparing_String_And_Concatenated_Inte
 
 TEST(Parser, Should_Construct_Empty_Object) {
 	ostringstream inputStream;
-	inputStream << "var obj = { }; return obj.b;";
+	inputStream << "var obj = { }; return;";
 
 	string input = inputStream.str();
 	int result = runParser(input);
@@ -1204,6 +1122,40 @@ TEST(Parser, Should_Access_Object_Properties_With_Array_Notation) {
 	EXPECT_EQ(result, PARSE_RESULT_SUCCESS);
 	EXPECT_TRUE(_PARSE_RESULT.getPrimitive().isInteger());
 	EXPECT_EQ(_PARSE_RESULT.getPrimitive().getInteger(), INTEGER_VALUE_A * 2);
+}
+
+TEST(Parser, Should_Fail_When_Random_Literal_Inside_Object_Body) {
+	ostringstream inputStream;
+	inputStream << "var obj = { a: " << FLOAT_MINUS_VALUE << ", b: " << INTEGER_VALUE_A 
+	<< ", c }; return;";
+
+	string input = inputStream.str();
+	int result = runParser(input);
+
+	EXPECT_EQ(result, PARSE_RESULT_FAILITURE);
+}
+
+TEST(Parser, Should_Fail_When_Wrong_Notation_Inside_Object_Body) {
+	ostringstream inputStream;
+	inputStream << "var obj = { a: " << FLOAT_MINUS_VALUE << ", b: " << INTEGER_VALUE_A 
+	<< ", c - \"abc\" }; return;";
+
+	string input = inputStream.str();
+	int result = runParser(input);
+
+	EXPECT_EQ(result, PARSE_RESULT_FAILITURE);
+}
+
+TEST(Parser, Should_Throw_When_Undefined_Variable_Assignment_Inside_Object_Body) {
+	ostringstream inputStream;
+	inputStream << "var obj = { a: " << FLOAT_MINUS_VALUE << ", b: " << INTEGER_VALUE_A 
+	<< ", c: d }; return;";
+
+	string input = inputStream.str();
+	int result = runParser(input);
+
+	EXPECT_EQ(result, PARSE_RESULT_SUCCESS);
+	EXPECT_EQ(_ERROR_MESSAGE, "[ERROR]\tInvalid identifier: Error! Undefined identifier.");
 }
 
 TEST(Parser, Should_Access_Global_Function) {

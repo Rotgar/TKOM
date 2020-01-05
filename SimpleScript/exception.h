@@ -26,7 +26,6 @@ public:
 
     const string what() const throw();
     Variable getVariable() const;
-
 };
 
 class ZeroDivisionException : public ParseException {
